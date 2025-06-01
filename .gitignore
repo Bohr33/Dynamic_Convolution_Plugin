@@ -1,0 +1,12 @@
+#Ignore audio files folder
+Resources/
+
+#Ignore audio files
+*.wav
+*.aiff
+
+#ignore Builds
+Builds/
+
+#and library code
+JuceLibraryCode/
