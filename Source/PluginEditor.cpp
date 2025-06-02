@@ -22,6 +22,7 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     openButton.onClick = [this] {openButtonClicked();};
     
     formatManager.registerBasicFormats();
+    thumbnail.addChangeListener(this);
     
     setSize (400, 300);
 }
@@ -66,28 +67,27 @@ void Dynamic_ConvolverAudioProcessorEditor::paintIfFileLoaded(juce::Graphics &g,
     g.setColour(juce::Colours::darkcyan);
     g.fillRect(bounds);
     g.setColour(juce::Colours::whitesmoke);
-    thumbnail.drawChannel(g, bounds, 0.0f, thumbnail.getTotalLength(), 0, 1.0f);
+    thumbnail.drawChannels(g, bounds, 0.0f, thumbnail.getTotalLength(), 1.0f);
 }
 
 void Dynamic_ConvolverAudioProcessorEditor::changeListenerCallback(juce::ChangeBroadcaster *source)
 {
     if(source == &thumbnail)
+    {
         thumbnailChanged();
-    
+    }
 }
+
 
 void Dynamic_ConvolverAudioProcessorEditor::thumbnailChanged()
 {
-    repaint();
-    DBG("repainting!\n");
+        repaint();
 }
 
 
 void Dynamic_ConvolverAudioProcessorEditor::openButtonClicked()
 {
     fileChooser = std::make_unique<juce::FileChooser>("Select an Audio File", juce::File{}, "*.wav");
-    
-    
     
     auto chooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
     
@@ -104,7 +104,7 @@ void Dynamic_ConvolverAudioProcessorEditor::openButtonClicked()
                 auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
                 thumbnail.setSource(new juce::FileInputSource (file));
             }
-            
+            audioProcessor.convolver.loadNewIR(file);
         }
     }
     );

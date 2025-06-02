@@ -53,6 +53,8 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    //==============================================================================
+    Convolution convolver;
 
 private:
     //==============================================================================
@@ -60,5 +62,4 @@ private:
 //    juce::dsp::ProcessSpec spec;
 //    juce::dsp::Convolution convolution;
     
-    Convolution convolver;
 };
