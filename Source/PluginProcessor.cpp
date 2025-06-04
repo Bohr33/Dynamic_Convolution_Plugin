@@ -102,6 +102,7 @@ void Dynamic_ConvolverAudioProcessor::prepareToPlay (double sampleRate, int samp
     spec.maximumBlockSize = getBlockSize();
     convolver.prepare(spec);
     convolver.reset();
+    f_conv.prepare(samplesPerBlock, sampleRate);
 }
 
 void Dynamic_ConvolverAudioProcessor::releaseResources()
@@ -144,7 +145,8 @@ void Dynamic_ConvolverAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     auto block = juce::dsp::AudioBlock<float>(buffer);
     auto context = juce::dsp::ProcessContextReplacing<float>(block);
 
-    convolver.process(context);
+    //convolver.process(context);
+    f_conv.getNextSampleBlock(buffer);
 }
 
 //==============================================================================

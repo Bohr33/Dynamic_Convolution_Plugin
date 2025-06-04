@@ -55,6 +55,7 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     //==============================================================================
     Convolution convolver;
+    Fast_Convolve f_conv;
 
 private:
     //==============================================================================
