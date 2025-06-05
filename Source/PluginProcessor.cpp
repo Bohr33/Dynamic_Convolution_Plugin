@@ -147,6 +147,7 @@ void Dynamic_ConvolverAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
 
     //convolver.process(context);
     f_conv.getNextSampleBlock(buffer);
+    //f_conv.nextSampleTest(buffer);
 }
 
 //==============================================================================

@@ -82,19 +82,23 @@ public:
         
         FFTdata.resize(fftSize * 2);
         summedFFT.resize(fftSize * 2);
-        outputArray.resize(fftSize);
+        outputArray.resize(fftSize * 2);
+        
+        overlapBuffer.setSize(1, buffsize);
+        juce::String chans = juce::String(overlapBuffer.getNumChannels());
+        
         
         juce::String size = juce::String(FFTdata.size());
         juce::String order = juce::String(fftOrder);
         juce::Logger::writeToLog("FFT size = " + size);
         juce::Logger::writeToLog("FFT order = " + order);
+        juce::Logger::writeToLog("chans = " + chans);
     }
     
     void loadNewIR(juce::File file)
     {
-        juce::AudioFormatManager formatManager;
-        formatManager.registerBasicFormats();
         
+        formatManager.registerBasicFormats();
         std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
         
         if(reader == nullptr)
@@ -104,10 +108,16 @@ public:
             return;
         }
         
-        juce::Logger::writeToLog("IR loaded successfully!\n");
+        
+        
+        juce::String string = juce::String(reader->lengthInSamples);
+        juce::String chans = juce::String(reader->numChannels);
+        
         
         irAudio.setSize((int)reader->numChannels, (int)reader->lengthInSamples);
-        reader->read(&irAudio, 0, irAudio.getNumSamples(), 0, true, true);
+        reader->read(&irAudio, 0, (int)reader->lengthInSamples, 0, true, true);
+        
+        juce::Logger::writeToLog("IR loaded successfully!\n");
         createIRfft();
     }
     
@@ -115,29 +125,37 @@ public:
     {
         matrix.resize(outside);
         for(auto& index : matrix)
-            index.resize(inside);
+            index.resize(inside, 0.0);
+        
+        juce::Logger::writeToLog("resized Matrix!");
     }
     
     void createIRfft()
     {
+        
+        
         //get number or partitions needed, and resize our partitions vector
         //Partition size is 1/2 FFTsize,
         int partitionSize = buffersize;
         int totalSamples = irAudio.getNumSamples();
         
+        
+        
         //Ensure that we get enough partitions to hold any number of samples, i.e. round up numPartitions
         numPartitions = (totalSamples + partitionSize - 1) / partitionSize;
+        juce::String pString = juce::String(numPartitions);
+        numPartitions = std::min(300, numPartitions);
         
         //resize matrices
         resizeMatrix(IRffts, (size_t) numPartitions + 1, (size_t) fftSize * 2);
         resizeMatrix(inputFFTbuffer, (size_t) numPartitions + 1, (size_t) fftSize * 2);
         
-        
+    
         auto size = IRffts.size();
         
         juce::String myString = juce::String(size);
         juce::String newString = juce::String(partitionSize);
-        juce::String pString = juce::String(numPartitions);
+        
         juce::String sString = juce::String(totalSamples);
         
         juce::Logger::writeToLog("vector size = " + myString);
@@ -165,6 +183,21 @@ public:
         }
         
         juce::Logger::writeToLog("IR FFT Created Successfully!");
+        IRloaded = true;
+    }
+    
+    
+    void nextSampleTest(juce::AudioBuffer<float>& buffer)
+    {
+        auto* out = buffer.getWritePointer(0);
+        auto* out2 = buffer.getWritePointer(1);
+        
+        //Sum result and last overlap
+        for(auto i = 0; i < fftSize/2; ++i)
+        {
+            out[i] = buffer.getSample(0, i) * 5;
+            out2[i] = buffer.getSample(1,i) * 5;
+        }
     }
     
     void getNextSampleBlock(juce::AudioBuffer<float>& buffer)
@@ -188,16 +221,14 @@ public:
         
         //zero pad data
         std::fill(FFTdata.begin(), FFTdata.end(), 0.0f);
-        
+
         for(auto i = 0; i < buffer.getNumSamples(); ++i)
         {
             FFTdata[i] = buffer.getSample(0, i);
         }
-        
+
         fft->performRealOnlyForwardTransform(FFTdata.data());
-        
         addNewInputFFT(FFTdata);
-        
         
         std::fill(summedFFT.begin(), summedFFT.end(), 0.0f);
         
@@ -207,42 +238,44 @@ public:
             auto currentFFTindex = ((inputFftIndex - 1 + numPartitions) - i) % numPartitions;
             
             multiplyFFTs(inputFFTbuffer[currentFFTindex], IRffts[i], outputArray);
-            
-            for(int j = 0; j < fftSize; ++j)
+
+            for(int j = 0; j < outputArray.size(); ++j)
             {
-                summedFFT[j] += outputArray[j];
+                summedFFT[j] += outputArray[j]/numPartitions;
             }
         }
         
         //perform IFT on sum
         fft->performRealOnlyInverseTransform(summedFFT.data());
-        
+
         auto* out = buffer.getWritePointer(0);
         auto* out2 = buffer.getWritePointer(1);
-        auto* overlap = overlapBuffer.getWritePointer(0);
+        auto* overlap = overlapBuffer.getReadPointer(0);
+        
         
         //Sum result and last overlap
-        for(auto i = 0; i < fftSize/2; ++i)
+        for(auto i = 0; i < buffersize; ++i)
         {
             out[i] = summedFFT[i] + overlap[i];
             out2[i] = summedFFT[i] + overlap[i];
-            
         }
         
-        //copy first half
-        auto halfArray = summedFFT.size()/2;
-        std::copy(summedFFT.begin() + halfArray, summedFFT.end(), overlapBuffer.getWritePointer(0));
+        //copy second quarter of array
+        auto quarterArray = summedFFT.size()/4 ;
+        std::copy(summedFFT.begin() + quarterArray, summedFFT.begin() + 2*quarterArray, overlapBuffer.getWritePointer(0));
     }
     
     void addNewInputFFT(std::vector<float>& input)
     {
-        std::copy(input.begin(), input.end(), inputFFTbuffer[inputFftIndex].end());
+        auto size = inputFFTbuffer.size();
+        
+        if (inputFftIndex >= size)
+            inputFftIndex = 0; // Wrap before use
+        
+        //copy data from input to buffer
+        juce::FloatVectorOperations::copy(inputFFTbuffer[inputFftIndex].data(), input.data(), size);
+
         inputFftIndex += 1;
-        
-        //If index is greater than array, wrap
-        if(inputFftIndex >= inputFFTbuffer.size())
-            inputFftIndex = 0;
-        
     }
     
     void multiplyFFTs(const std::vector<float>& input, const std::vector<float>& irFFT, std::vector<float>& result)
@@ -250,7 +283,7 @@ public:
         result[0] = input[0] * irFFT[0];
         result[1] = input[1] * irFFT[1];
         
-        for(int i = 2; i < fftSize; i += 2)
+        for(int i = 2; i < input.size(); i += 2)
         {
             auto realA = input[i];
             auto realB = irFFT[i];
@@ -258,7 +291,7 @@ public:
             auto imB = irFFT[i+1];
             
             result[i] = realA * realB - imA * imB;
-            result[i+1] = realA * imA + realB * imB;
+            result[i+1] = realA * imB + realB * imA;
         }
         
     }
@@ -273,6 +306,8 @@ private:
     int fftIndex = 0;
     
     bool IRloaded = false;
+    
+    juce::AudioFormatManager formatManager;
     
     //FFT Object
     std::unique_ptr<juce::dsp::FFT> fft;
