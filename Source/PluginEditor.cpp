@@ -21,10 +21,28 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     openButton.setButtonText("Open");
     openButton.onClick = [this] {openButtonClicked();};
     
+    filePos.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    filePos.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    filePos.setRange(0.0f, 1.0f, 0.01);
+    fileLength.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    fileLength.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    filePos.setRange(0.0f, 1.0f, 0.01);
+    
+    fPosLabel.setText("File Position", juce::dontSendNotification);
+    fPosLabel.setJustificationType(juce::Justification::centred);
+    fLengthLabel.setText("File Length", juce::dontSendNotification);
+    fLengthLabel.setJustificationType(juce::Justification::centred);
+    
+    addAndMakeVisible(&fLengthLabel);
+    addAndMakeVisible(&fPosLabel);
+    addAndMakeVisible(&filePos);
+    addAndMakeVisible(&fileLength);
+    
+    
     formatManager.registerBasicFormats();
     thumbnail.addChangeListener(this);
     
-    setSize (400, 300);
+    setSize (400, 470);
 }
 
 Dynamic_ConvolverAudioProcessorEditor::~Dynamic_ConvolverAudioProcessorEditor()
@@ -36,14 +54,32 @@ void Dynamic_ConvolverAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
-    openButton.setBounds(20, getHeight()-40, getWidth()-40, 20);
+    auto height = getHeight();
+    auto width = getWidth();
+        
+    auto knobWidth = 100;
+    auto knobHeight = 100;
+    
+    auto labelHeight = 50;
+    
+    auto knobPadding = 10;
+    auto knobsX = width/2 - knobWidth - knobPadding/2;
+    
+    openButton.setBounds(20, getHeight()-190, getWidth()-40, 20);
+    filePos.setBounds(knobsX, height - (knobHeight + labelHeight), knobWidth, knobHeight);
+    fPosLabel.setBounds(knobsX, height - labelHeight, knobWidth, labelHeight);
+    
+    fileLength.setBounds(knobsX + knobPadding + knobWidth, height - (knobHeight + labelHeight), knobWidth, knobHeight);
+    fLengthLabel.setBounds(knobsX + knobPadding + knobWidth, height - labelHeight, knobWidth, labelHeight);
+    
+    
 }
 
 void Dynamic_ConvolverAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-    juce::Rectangle<int> thumbnailBounds (20, 20, getWidth()-40, getHeight()-80);
+    juce::Rectangle<int> thumbnailBounds (20, 20, getWidth()-40, getHeight()-230);
     
     if(thumbnail.getNumChannels() == 0)
     {
@@ -52,6 +88,9 @@ void Dynamic_ConvolverAudioProcessorEditor::paint (juce::Graphics& g)
     {
         paintIfFileLoaded(g, thumbnailBounds);
     }
+    
+    fileHighlight.setHighlightedBounds(thumbnailBounds);
+    fileHighlight.paint(g);
 }
 
 void Dynamic_ConvolverAudioProcessorEditor::paintIfNoFileLoaded(juce::Graphics& g, const juce::Rectangle<int> bounds)
@@ -109,5 +148,11 @@ void Dynamic_ConvolverAudioProcessorEditor::openButtonClicked()
         }
     }
     );
+}
+
+void Dynamic_ConvolverAudioProcessorEditor::drawFileHighlight(juce::Graphics& g)
+{
+    
+    
 }
 

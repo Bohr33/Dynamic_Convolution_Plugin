@@ -96,12 +96,12 @@ void Dynamic_ConvolverAudioProcessor::prepareToPlay (double sampleRate, int samp
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = getSampleRate();
-    spec.numChannels = 2;
-    spec.maximumBlockSize = getBlockSize();
-    convolver.prepare(spec);
-    convolver.reset();
+//    juce::dsp::ProcessSpec spec;
+//    spec.sampleRate = getSampleRate();
+//    spec.numChannels = 2;
+//    spec.maximumBlockSize = getBlockSize();
+//    convolver.prepare(spec);
+//    convolver.reset();
     f_conv.prepare(samplesPerBlock, sampleRate);
 }
 
@@ -147,7 +147,6 @@ void Dynamic_ConvolverAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
 
     //convolver.process(context);
     f_conv.getNextSampleBlock(buffer);
-    //f_conv.nextSampleTest(buffer);
 }
 
 //==============================================================================

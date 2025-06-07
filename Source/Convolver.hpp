@@ -71,32 +71,25 @@ public:
         formatManager.registerBasicFormats();
     };
     
-    void prepare(int buffsize, double sampleRate)
+    virtual ~Fast_Convolve() = default;
+    
+    virtual void prepare(int buffsize, double sampleRate)
     {
-        //eventually this will be a function that can be used to resize the buffers
-        
+        //Set Important Info
         this->buffersize = buffsize;
-        
         fftSize = buffsize * 2;
+        auto sizeTimesTwo = fftSize * 2;
         fftOrder = std::log2(fftSize);
         
         fft = std::make_unique<juce::dsp::FFT>(fftOrder);
         
-        FFTbuffer.resize(fftSize * 2);
-        summedFFT.resize(fftSize * 2);
-        
+        //Size Buffers and Arrays
+        FFTbuffer.resize(sizeTimesTwo);
+        summedFFT.resize(sizeTimesTwo);
         overlapBuffer.setSize(1, buffsize);
-        juce::String chans = juce::String(overlapBuffer.getNumChannels());
-        
-        
-        juce::String size = juce::String(FFTbuffer.size());
-        juce::String order = juce::String(fftOrder);
-        juce::Logger::writeToLog("FFT size = " + size);
-        juce::Logger::writeToLog("FFT order = " + order);
-        juce::Logger::writeToLog("chans = " + chans);
     }
     
-    void loadNewIR(juce::File file)
+    virtual void loadNewIR(juce::File file)
     {
         std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
         
@@ -121,10 +114,8 @@ public:
             index.resize(inside, 0.0);
     }
     
-    void createIRfft()
+    virtual void createIRfft()
     {
-        
-        
         //get number or partitions needed, and resize our partitions vector
         //Partition size is 1/2 FFTsize,
         int partitionSize = buffersize;
@@ -133,7 +124,7 @@ public:
         //Ensure that we get enough partitions to hold any number of samples, i.e. round up numPartitions
         numPartitions = (totalSamples + partitionSize - 1) / partitionSize;
         juce::String pString = juce::String(numPartitions);
-        numPartitions = std::min(300, numPartitions);
+        numPartitions = std::min(400, numPartitions);
         
         //Clear all currently loaded Data
         clearBuffers();
@@ -164,9 +155,7 @@ public:
                     //only copy first channel for now
                     IRffts[i][j] = irAudio.getSample(0, index);
                 }else
-                {
                     IRffts[i][j] = 0.0f;
-                }
             }
             //perform fft on each partition
             fft->performRealOnlyForwardTransform(IRffts[i].data());
@@ -188,46 +177,30 @@ public:
         juce::FloatVectorOperations::clear(summedFFT.data(), summedFFT.size());
     }
     
-    void getNextSampleBlock(juce::AudioBuffer<float>& buffer)
+    virtual void getNextSampleBlock(juce::AudioBuffer<float>& buffer)
     {
         jassert(buffer.getNumSamples() == fftSize/2);
-        //1. copy input buffer audio into fft object, zero-pad
-        //2. perform fft transform on input
-        //3. Store input FFT into circular buffer
-        //4. multiply input fft with ir fft
-        //5. do overlap-add method and add other necessary audio results
-            //5a. do FFT multiplication with previous last input audio and next IIR block
-            //5b. repeat for all partitions
-            //5c. Perform ift on all relevant partitions
-            //5d. sum all convolution results.
-        //6. return audio
         
         if(!IRloaded)
             return;
         
-        //zero pad data
-        std::fill(FFTbuffer.begin(), FFTbuffer.end(), 0.0f);
-
-        for(auto i = 0; i < buffer.getNumSamples(); ++i)
-        {
-            FFTbuffer[i] = buffer.getSample(0, i);
-        }
-
+        //zero pad data and copy input
+        juce::FloatVectorOperations::clear(FFTbuffer.data(), FFTbuffer.size());
+        juce::FloatVectorOperations::copy(FFTbuffer.data(), buffer.getReadPointer(0), buffer.getNumSamples());
+        juce::FloatVectorOperations::clear(summedFFT.data(), summedFFT.size());
+        
+        //perform FFT and add to buffer
         fft->performRealOnlyForwardTransform(FFTbuffer.data());
         addNewInputFFT(FFTbuffer);
-        
-        std::fill(summedFFT.begin(), summedFFT.end(), 0.0f);
         
         //loop through all input FFTS and IR FFTS, offset and multiply
         for(int i = 0;  i < numPartitions; i++)
         {
             auto currentFFTindex = ((inputFftIndex - 1 + numPartitions) - i) % numPartitions;
             multiplyFFTs(inputFFTbuffer[currentFFTindex], IRffts[i], FFTbuffer);
-
-            for(int j = 0; j < FFTbuffer.size(); ++j)
-            {
-                summedFFT[j] += FFTbuffer[j]/numPartitions;
-            }
+            
+            juce::FloatVectorOperations::multiply(FFTbuffer.data(), 1.0/numPartitions, FFTbuffer.size());
+            juce::FloatVectorOperations::add(summedFFT.data(), FFTbuffer.data(), FFTbuffer.size());
         }
         
         //perform IFT on sum
@@ -236,7 +209,6 @@ public:
         auto* out = buffer.getWritePointer(0);
         auto* out2 = buffer.getWritePointer(1);
         auto* overlap = overlapBuffer.getReadPointer(0);
-        
         
         //Sum result and last overlap
         for(auto i = 0; i < buffersize; ++i)
@@ -247,7 +219,7 @@ public:
         
         //copy second quarter of array
         auto quarterArray = summedFFT.size()/4 ;
-        std::copy(summedFFT.begin() + quarterArray, summedFFT.begin() + 2*quarterArray, overlapBuffer.getWritePointer(0));
+        juce::FloatVectorOperations::copy(overlapBuffer.getWritePointer(0), summedFFT.data() + quarterArray, overlapBuffer.getNumSamples());
     }
     
     void addNewInputFFT(std::vector<float>& input)
@@ -283,7 +255,6 @@ public:
     }
     
 private:
-    
     int buffersize;
     int fftSize;
     int fftOrder;
@@ -317,5 +288,20 @@ private:
     //Overlap Buffer
     juce::AudioBuffer<float> overlapBuffer;
 };
+
+//void timeDomainConvolution(juce::AudioBuffer<float>& buffer)
+//{
+//    auto* in = buffer.getReadPointer(0);
+//    auto* out = earlyOut.getWritePointer(0);
+//
+//    for(int i = 0; i < buffer.getNumSamples(); ++i)
+//    {
+//        for(int j = 0; j < earlyIR.size(); ++j)
+//        {
+//            if(i - j >= 0)
+//                out[j] += earlyIR[j] * in[i - j];
+//        }
+//    }
+//}
 
 #endif /* Convolver_hpp */

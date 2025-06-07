@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "Graphics.hpp"
 
 //==============================================================================
 /**
@@ -33,6 +34,8 @@ public:
     void paintIfFileLoaded(juce::Graphics& g, const juce::Rectangle<int> bounds);
     
     void openButtonClicked();
+    
+    void drawFileHighlight(juce::Graphics& g);
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -45,6 +48,13 @@ private:
     juce::AudioThumbnail thumbnail;
     
     juce::TextButton openButton;
+    
+    juce::Slider filePos;
+    juce::Label  fPosLabel;
+    juce::Slider fileLength;
+    juce::Label  fLengthLabel;
+    
+    FileHighlight fileHighlight;
     
     std::unique_ptr<juce::FileChooser> fileChooser;
 
