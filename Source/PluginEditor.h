@@ -19,7 +19,7 @@ class Dynamic_ConvolverAudioProcessorEditor  : public juce::AudioProcessorEditor
                                                private juce::ChangeListener
 {
 public:
-    Dynamic_ConvolverAudioProcessorEditor (Dynamic_ConvolverAudioProcessor&);
+    Dynamic_ConvolverAudioProcessorEditor (Dynamic_ConvolverAudioProcessor&, juce::AudioProcessorValueTreeState& vts);
     ~Dynamic_ConvolverAudioProcessorEditor() override;
 
     //==============================================================================
@@ -41,6 +41,7 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     Dynamic_ConvolverAudioProcessor& audioProcessor;
+    juce::AudioProcessorValueTreeState& valueTreeState;
     
     
     juce::AudioFormatManager formatManager;
@@ -49,12 +50,17 @@ private:
     
     juce::TextButton openButton;
     
-    juce::Slider filePos;
+    juce::Slider filePosSlider;
     juce::Label  fPosLabel;
-    juce::Slider fileLength;
-    juce::Label  fLengthLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filePosAttch;
     
-    FileHighlight fileHighlight;
+    juce::Slider fileLengthSlider;
+    juce::Label  fLengthLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> fileLenAttch;
+    
+    //Custom Graphics Component
+//    FileHighlight fileHighlight;
+    std::unique_ptr<FileHighlight> fileHighlight;
     
     std::unique_ptr<juce::FileChooser> fileChooser;
 

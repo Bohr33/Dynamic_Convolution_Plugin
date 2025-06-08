@@ -11,26 +11,50 @@
 #include <JuceHeader.h>
 #include <stdio.h>
 
-class FileHighlight : public juce::Component
+class FileHighlight : public juce::Component, juce::AudioProcessorValueTreeState::Listener, juce::Timer
 {
 public:
-    FileHighlight(){};
+    FileHighlight(juce::AudioProcessorValueTreeState& vts) : valueTreeState(vts){
+        valueTreeState.addParameterListener("filepos", this);
+        valueTreeState.addParameterListener("filelength", this);
+        startTimerHz(60);
+    };
     
-    void setHighlightedBounds(juce::Rectangle<int> bounds)
+    ~FileHighlight() override
     {
-        HighlightedArea = bounds;
-        repaint(HighlightedArea);
+        valueTreeState.removeParameterListener("filepos", this);
+        valueTreeState.removeParameterListener("filelength", this);
     }
     
     void paint(juce::Graphics& g) override
     {
         g.setColour(juce::Colours::whitesmoke.withAlpha(0.5f));
-        g.fillRect(HighlightedArea);
+        
+        int newX = getWidth() * filePos.load();
+        int newWidth = getWidth() * fileLen.load();
+        
+        g.fillRect(newX, 0, newWidth, getHeight());
+    }
+    
+    void parameterChanged(const juce::String& parameterID, float newValue) override
+    {
+        if(parameterID == "filepos")
+            filePos.store(newValue);
+        else if (parameterID == "filelength")
+            fileLen.store(newValue);
+    }
+    
+    void timerCallback() override
+    {
+        repaint();
     }
     
     
 private:
-    juce::Rectangle<int> HighlightedArea;
+    juce::AudioProcessorValueTreeState& valueTreeState;
+    
+    std::atomic<float> filePos{0.0};
+    std::atomic<float> fileLen{1.0};
 };
 
 #endif /* Graphics_hpp */

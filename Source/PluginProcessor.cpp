@@ -19,9 +19,12 @@ Dynamic_ConvolverAudioProcessor::Dynamic_ConvolverAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+        parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
 #endif
 {
+    filePosParameter = parameters.getRawParameterValue("filelength");
+    fileLengthParameter = parameters.getRawParameterValue("filepos");
 }
 
 Dynamic_ConvolverAudioProcessor::~Dynamic_ConvolverAudioProcessor()
@@ -29,6 +32,19 @@ Dynamic_ConvolverAudioProcessor::~Dynamic_ConvolverAudioProcessor()
 }
 
 //==============================================================================
+juce::AudioProcessorValueTreeState::ParameterLayout Dynamic_ConvolverAudioProcessor::createParameterLayout()
+{
+    int versionHint = 1;
+    
+    using namespace juce;
+    
+    return
+    {
+        std::make_unique<AudioParameterFloat>(ParameterID {"filelength", versionHint}, "File Length", 0.0f, 1.0f, 1.0f),
+        std::make_unique<AudioParameterFloat> (ParameterID{"filepos", versionHint},  "File Pos", 0.0f, 1.0f, 0.0f)
+    };
+}
+
 const juce::String Dynamic_ConvolverAudioProcessor::getName() const
 {
     return JucePlugin_Name;
@@ -142,8 +158,8 @@ void Dynamic_ConvolverAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     juce::ScopedNoDenormals noDenormals;
     
     //Convert Buffer into Processing Context
-    auto block = juce::dsp::AudioBlock<float>(buffer);
-    auto context = juce::dsp::ProcessContextReplacing<float>(block);
+//    auto block = juce::dsp::AudioBlock<float>(buffer);
+//    auto context = juce::dsp::ProcessContextReplacing<float>(block);
 
     //convolver.process(context);
     f_conv.getNextSampleBlock(buffer);
@@ -157,7 +173,7 @@ bool Dynamic_ConvolverAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* Dynamic_ConvolverAudioProcessor::createEditor()
 {
-    return new Dynamic_ConvolverAudioProcessorEditor (*this);
+    return new Dynamic_ConvolverAudioProcessorEditor (*this, parameters);
 }
 
 //==============================================================================

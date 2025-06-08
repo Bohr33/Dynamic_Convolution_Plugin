@@ -54,12 +54,21 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     //==============================================================================
+    
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    
     Convolution convolver;
     Fast_Convolve f_conv;
-
+    
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Dynamic_ConvolverAudioProcessor)
+    
+    juce::AudioProcessorValueTreeState parameters;
+    std::atomic<float>* filePosParameter = nullptr;
+    std::atomic<float>* fileLengthParameter  = nullptr;
+    
+    
 //    juce::dsp::ProcessSpec spec;
 //    juce::dsp::Convolution convolution;
     

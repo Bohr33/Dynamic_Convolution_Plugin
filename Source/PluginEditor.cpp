@@ -10,8 +10,8 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dynamic_ConvolverAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p),
+Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dynamic_ConvolverAudioProcessor& p, juce::AudioProcessorValueTreeState& vts)
+    : AudioProcessorEditor (&p), audioProcessor (p), valueTreeState(vts),
     thumbnailCache(5), thumbnail(512, formatManager, thumbnailCache)
 {
     // Make sure that before the constructor has finished, you've set the
@@ -21,12 +21,14 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     openButton.setButtonText("Open");
     openButton.onClick = [this] {openButtonClicked();};
     
-    filePos.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    filePos.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    filePos.setRange(0.0f, 1.0f, 0.01);
-    fileLength.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    fileLength.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    filePos.setRange(0.0f, 1.0f, 0.01);
+    
+    filePosAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "filepos", filePosSlider));
+    filePosSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    filePosSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    
+    fileLenAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "filelength", fileLengthSlider));
+    fileLengthSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    fileLengthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
     fPosLabel.setText("File Position", juce::dontSendNotification);
     fPosLabel.setJustificationType(juce::Justification::centred);
@@ -35,12 +37,16 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     
     addAndMakeVisible(&fLengthLabel);
     addAndMakeVisible(&fPosLabel);
-    addAndMakeVisible(&filePos);
-    addAndMakeVisible(&fileLength);
     
+    addAndMakeVisible(&filePosSlider);
+    addAndMakeVisible(&fileLengthSlider);
     
     formatManager.registerBasicFormats();
     thumbnail.addChangeListener(this);
+    
+    fileHighlight = std::make_unique<FileHighlight>(valueTreeState);
+    addAndMakeVisible(*fileHighlight);
+    
     
     setSize (400, 470);
 }
@@ -65,14 +71,17 @@ void Dynamic_ConvolverAudioProcessorEditor::resized()
     auto knobPadding = 10;
     auto knobsX = width/2 - knobWidth - knobPadding/2;
     
+    juce::Rectangle<int> thumbnailBounds (20, 20, width-40, height-230);
+    
+    fileHighlight->setBounds(thumbnailBounds);
+    
     openButton.setBounds(20, getHeight()-190, getWidth()-40, 20);
-    filePos.setBounds(knobsX, height - (knobHeight + labelHeight), knobWidth, knobHeight);
+    
+    filePosSlider.setBounds(knobsX, height - (knobHeight + labelHeight), knobWidth, knobHeight);
     fPosLabel.setBounds(knobsX, height - labelHeight, knobWidth, labelHeight);
     
-    fileLength.setBounds(knobsX + knobPadding + knobWidth, height - (knobHeight + labelHeight), knobWidth, knobHeight);
+    fileLengthSlider.setBounds(knobsX + knobPadding + knobWidth, height - (knobHeight + labelHeight), knobWidth, knobHeight);
     fLengthLabel.setBounds(knobsX + knobPadding + knobWidth, height - labelHeight, knobWidth, labelHeight);
-    
-    
 }
 
 void Dynamic_ConvolverAudioProcessorEditor::paint (juce::Graphics& g)
@@ -88,9 +97,6 @@ void Dynamic_ConvolverAudioProcessorEditor::paint (juce::Graphics& g)
     {
         paintIfFileLoaded(g, thumbnailBounds);
     }
-    
-    fileHighlight.setHighlightedBounds(thumbnailBounds);
-    fileHighlight.paint(g);
 }
 
 void Dynamic_ConvolverAudioProcessorEditor::paintIfNoFileLoaded(juce::Graphics& g, const juce::Rectangle<int> bounds)
