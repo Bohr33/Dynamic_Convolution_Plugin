@@ -150,15 +150,8 @@ void Dynamic_ConvolverAudioProcessorEditor::openButtonClicked()
                 thumbnail.setSource(new juce::FileInputSource (file));
             }
             //audioProcessor.convolver.loadNewIR(file);
-            audioProcessor.f_conv.loadNewIR(file);
+            audioProcessor.d_conv->loadNewIR(file);
         }
     }
     );
 }
-
-void Dynamic_ConvolverAudioProcessorEditor::drawFileHighlight(juce::Graphics& g)
-{
-    
-    
-}
-

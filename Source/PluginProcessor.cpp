@@ -25,6 +25,7 @@ Dynamic_ConvolverAudioProcessor::Dynamic_ConvolverAudioProcessor()
 {
     filePosParameter = parameters.getRawParameterValue("filelength");
     fileLengthParameter = parameters.getRawParameterValue("filepos");
+    d_conv = std::make_unique<Dynamic_Convolution>(parameters);
 }
 
 Dynamic_ConvolverAudioProcessor::~Dynamic_ConvolverAudioProcessor()
@@ -118,7 +119,8 @@ void Dynamic_ConvolverAudioProcessor::prepareToPlay (double sampleRate, int samp
 //    spec.maximumBlockSize = getBlockSize();
 //    convolver.prepare(spec);
 //    convolver.reset();
-    f_conv.prepare(samplesPerBlock, sampleRate);
+//    f_conv.prepare(samplesPerBlock, sampleRate);
+    d_conv->prepare(samplesPerBlock, sampleRate);
 }
 
 void Dynamic_ConvolverAudioProcessor::releaseResources()
@@ -157,12 +159,7 @@ void Dynamic_ConvolverAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
 {
     juce::ScopedNoDenormals noDenormals;
     
-    //Convert Buffer into Processing Context
-//    auto block = juce::dsp::AudioBlock<float>(buffer);
-//    auto context = juce::dsp::ProcessContextReplacing<float>(block);
-
-    //convolver.process(context);
-    f_conv.getNextSampleBlock(buffer);
+    d_conv->process(buffer);
 }
 
 //==============================================================================

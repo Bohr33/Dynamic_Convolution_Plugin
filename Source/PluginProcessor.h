@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "Convolver.hpp"
+#include "DynamicConvolver.hpp"
 
 //==============================================================================
 /**
@@ -58,7 +59,9 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
     Convolution convolver;
-    Fast_Convolve f_conv;
+//    Fast_Convolve f_conv;
+//    Dynamic_Convolution d_conv;
+    std::unique_ptr<Dynamic_Convolution> d_conv;
     
 private:
     //==============================================================================
