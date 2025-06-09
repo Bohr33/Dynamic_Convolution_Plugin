@@ -14,41 +14,12 @@
 class FileHighlight : public juce::Component, juce::AudioProcessorValueTreeState::Listener, juce::Timer
 {
 public:
-    FileHighlight(juce::AudioProcessorValueTreeState& vts) : valueTreeState(vts){
-        valueTreeState.addParameterListener("filepos", this);
-        valueTreeState.addParameterListener("filelength", this);
-        startTimerHz(60);
-    };
+    FileHighlight(juce::AudioProcessorValueTreeState& vts);
+    ~FileHighlight() override;
     
-    ~FileHighlight() override
-    {
-        valueTreeState.removeParameterListener("filepos", this);
-        valueTreeState.removeParameterListener("filelength", this);
-    }
-    
-    void paint(juce::Graphics& g) override
-    {
-        g.setColour(juce::Colours::whitesmoke.withAlpha(0.5f));
-        
-        int newX = getWidth() * filePos.load();
-        int newWidth = getWidth() * fileLen.load();
-        
-        g.fillRect(newX, 0, newWidth, getHeight());
-    }
-    
-    void parameterChanged(const juce::String& parameterID, float newValue) override
-    {
-        if(parameterID == "filepos")
-            filePos.store(newValue);
-        else if (parameterID == "filelength")
-            fileLen.store(newValue);
-    }
-    
-    void timerCallback() override
-    {
-        repaint();
-    }
-    
+    void paint(juce::Graphics& g) override;
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
+    void timerCallback() override;
     
 private:
     juce::AudioProcessorValueTreeState& valueTreeState;
