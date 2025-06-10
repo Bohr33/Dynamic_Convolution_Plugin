@@ -30,6 +30,7 @@ public:
     void multiplyFFTs(const std::vector<float>& input, const std::vector<float>& irFFT, std::vector<float>& result);
     
     void parameterChanged(const juce::String& parameterID, float newValue) override;
+    void normalizeFile();
     
 private:
     int buffersize;
@@ -43,6 +44,7 @@ private:
     
     std::atomic<float> filePosition{0.0};
     std::atomic<float> fileLength{1.0};
+    std::atomic<float> dryWet{0.5};
     
     juce::AudioFormatManager formatManager;
     juce::AudioProcessorValueTreeState& valueTreeState;

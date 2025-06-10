@@ -42,7 +42,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout Dynamic_ConvolverAudioProces
     return
     {
         std::make_unique<AudioParameterFloat>(ParameterID {"filelength", versionHint}, "File Length", 0.0f, 1.0f, 1.0f),
-        std::make_unique<AudioParameterFloat> (ParameterID{"filepos", versionHint},  "File Pos", 0.0f, 1.0f, 0.0f)
+        std::make_unique<AudioParameterFloat> (ParameterID{"filepos", versionHint},  "File Pos", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"drywet", versionHint},
+                                              "Dry/Wet", 0.0f, 1.0f, 0.5f)
     };
 }
 

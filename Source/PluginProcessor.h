@@ -70,6 +70,7 @@ private:
     juce::AudioProcessorValueTreeState parameters;
     std::atomic<float>* filePosParameter = nullptr;
     std::atomic<float>* fileLengthParameter  = nullptr;
+    std::atomic<float>* dryWetParameter = nullptr;
     
     
 //    juce::dsp::ProcessSpec spec;

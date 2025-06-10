@@ -12,6 +12,7 @@ Dynamic_Convolution::Dynamic_Convolution(juce::AudioProcessorValueTreeState& vts
     formatManager.registerBasicFormats();
     valueTreeState.addParameterListener("filepos", this);
     valueTreeState.addParameterListener("filelength", this);
+    valueTreeState.addParameterListener("drywet", this);
 };
 
 Dynamic_Convolution::~Dynamic_Convolution() = default;
@@ -45,9 +46,17 @@ void Dynamic_Convolution::loadNewIR(juce::File file)
     
     irAudio.setSize((int)reader->numChannels, (int)reader->lengthInSamples);
     reader->read(&irAudio, 0, (int)reader->lengthInSamples, 0, true, true);
+    normalizeFile();
     
     juce::Logger::writeToLog("IR loaded successfully!\n");
     createIRfft();
+}
+
+void Dynamic_Convolution::normalizeFile()
+{
+    auto numSamps = irAudio.getNumSamples();
+    auto mag = irAudio.getMagnitude(0, numSamps);
+    irAudio.applyGain(0, numSamps, 1/mag);
 }
 
 void Dynamic_Convolution::resizeMatrix(std::vector<std::vector<float>>& matrix, size_t outside, size_t inside)
@@ -129,6 +138,7 @@ void Dynamic_Convolution::process(juce::AudioBuffer<float>& buffer)
     
     float filePos = filePosition.load();
     float fileLen = fileLength.load();
+    float dw = dryWet.load();
     
     //zero pad data and copy input
     juce::FloatVectorOperations::clear(FFTbuffer.data(), FFTbuffer.size());
@@ -157,6 +167,7 @@ void Dynamic_Convolution::process(juce::AudioBuffer<float>& buffer)
     //perform IFT on sum
     fft->performRealOnlyInverseTransform(summedFFT.data());
 
+    auto* in = buffer.getWritePointer(0);
     auto* out = buffer.getWritePointer(0);
     auto* out2 = buffer.getWritePointer(1);
     auto* overlap = overlapBuffer.getReadPointer(0);
@@ -164,8 +175,8 @@ void Dynamic_Convolution::process(juce::AudioBuffer<float>& buffer)
     //Sum result and last overlap
     for(auto i = 0; i < buffersize; ++i)
     {
-        out[i] = summedFFT[i] + overlap[i];
-        out2[i] = summedFFT[i] + overlap[i];
+        out[i] = (summedFFT[i] + overlap[i]) * dw + in[i]* (1-dw);
+        out2[i] = (summedFFT[i] + overlap[i]) * dw + in[i]* (1-dw);
     }
     
     //copy second quarter of array
@@ -211,4 +222,6 @@ void Dynamic_Convolution::parameterChanged(const juce::String& parameterID, floa
         filePosition.store(newValue);
     else if (parameterID == "filelength")
         fileLength.store(newValue);
+    else if(parameterID == "drywet")
+        dryWet.store(newValue);
 }

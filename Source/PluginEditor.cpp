@@ -21,6 +21,10 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     openButton.setButtonText("Open");
     openButton.onClick = [this] {openButtonClicked();};
     
+    addAndMakeVisible(&reverseButton);
+    reverseButton.setButtonText("Reverse");
+    reverseButton.onClick = [this] {reverseButtonClicked();};
+    
     
     filePosAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "filepos", filePosSlider));
     filePosSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
@@ -30,16 +34,25 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     fileLengthSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     fileLengthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
+    dryWetAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "drywet", dryWetSlider));
+    dryWetSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    dryWetSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    
     fPosLabel.setText("File Position", juce::dontSendNotification);
     fPosLabel.setJustificationType(juce::Justification::centred);
     fLengthLabel.setText("File Length", juce::dontSendNotification);
     fLengthLabel.setJustificationType(juce::Justification::centred);
+    dwLabel.setText("Dry/Wet", juce::dontSendNotification);
+    dwLabel.setJustificationType(juce::Justification::centred);
     
     addAndMakeVisible(&fLengthLabel);
     addAndMakeVisible(&fPosLabel);
     
     addAndMakeVisible(&filePosSlider);
     addAndMakeVisible(&fileLengthSlider);
+    
+    addAndMakeVisible(&dryWetSlider);
+    addAndMakeVisible(&dwLabel);
     
     formatManager.registerBasicFormats();
     thumbnail.addChangeListener(this);
@@ -63,25 +76,31 @@ void Dynamic_ConvolverAudioProcessorEditor::resized()
     auto height = getHeight();
     auto width = getWidth();
         
+    auto numKnobs = 3;
     auto knobWidth = 100;
     auto knobHeight = 100;
-    
     auto labelHeight = 50;
+    auto knobY = height - (knobHeight + labelHeight);
+    auto labelY = height - labelHeight;
     
     auto knobPadding = 10;
-    auto knobsX = width/2 - knobWidth - knobPadding/2;
+    auto knobsX = width/numKnobs  - knobWidth - knobPadding/numKnobs;
     
     juce::Rectangle<int> thumbnailBounds (20, 20, width-40, height-230);
     
     fileHighlight->setBounds(thumbnailBounds);
     
     openButton.setBounds(20, getHeight()-190, getWidth()-40, 20);
+    reverseButton.setBounds(20, height-150, 50, 20);
     
-    filePosSlider.setBounds(knobsX, height - (knobHeight + labelHeight), knobWidth, knobHeight);
-    fPosLabel.setBounds(knobsX, height - labelHeight, knobWidth, labelHeight);
+    filePosSlider.setBounds(knobsX, knobY, knobWidth, knobHeight);
+    fPosLabel.setBounds(knobsX, labelY, knobWidth, labelHeight);
     
-    fileLengthSlider.setBounds(knobsX + knobPadding + knobWidth, height - (knobHeight + labelHeight), knobWidth, knobHeight);
-    fLengthLabel.setBounds(knobsX + knobPadding + knobWidth, height - labelHeight, knobWidth, labelHeight);
+    fileLengthSlider.setBounds(knobsX + knobPadding + knobWidth, knobY, knobWidth, knobHeight);
+    fLengthLabel.setBounds(knobsX + knobPadding + knobWidth, labelY, knobWidth, labelHeight);
+    
+    dryWetSlider.setBounds(knobsX + 2*knobPadding + 2*knobWidth, knobY, knobWidth, knobHeight);
+    dwLabel.setBounds(knobsX + 2*knobPadding + 2*knobWidth,labelY, knobWidth, labelHeight);
 }
 
 void Dynamic_ConvolverAudioProcessorEditor::paint (juce::Graphics& g)
@@ -112,8 +131,11 @@ void Dynamic_ConvolverAudioProcessorEditor::paintIfFileLoaded(juce::Graphics &g,
     g.setColour(juce::Colours::darkcyan);
     g.fillRect(bounds);
     g.setColour(juce::Colours::whitesmoke);
+    
     thumbnail.drawChannels(g, bounds, 0.0f, thumbnail.getTotalLength(), 1.0f);
 }
+
+
 
 void Dynamic_ConvolverAudioProcessorEditor::changeListenerCallback(juce::ChangeBroadcaster *source)
 {
@@ -149,9 +171,14 @@ void Dynamic_ConvolverAudioProcessorEditor::openButtonClicked()
                 auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
                 thumbnail.setSource(new juce::FileInputSource (file));
             }
-            //audioProcessor.convolver.loadNewIR(file);
             audioProcessor.d_conv->loadNewIR(file);
         }
     }
     );
+}
+
+void Dynamic_ConvolverAudioProcessorEditor::reverseButtonClicked()
+{
+    reverseState = !reverseState;
+    repaint();
 }

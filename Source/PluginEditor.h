@@ -34,8 +34,8 @@ public:
     void paintIfFileLoaded(juce::Graphics& g, const juce::Rectangle<int> bounds);
     
     void openButtonClicked();
-    
-    void drawFileHighlight(juce::Graphics& g);
+    void reverseButtonClicked();
+    void drawAudioWaveform();
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -57,6 +57,13 @@ private:
     juce::Slider fileLengthSlider;
     juce::Label  fLengthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> fileLenAttch;
+    
+    juce::Slider dryWetSlider;
+    juce::Label dwLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryWetAttch;
+    
+    juce::TextButton reverseButton;
+    bool reverseState = false;
     
     //Custom Graphics Component
 //    FileHighlight fileHighlight;
