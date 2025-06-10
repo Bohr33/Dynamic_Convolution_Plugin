@@ -17,6 +17,12 @@ Dynamic_Convolution::Dynamic_Convolution(juce::AudioProcessorValueTreeState& vts
 
 Dynamic_Convolution::~Dynamic_Convolution() = default;
 
+void Dynamic_Convolution::process(juce::AudioBuffer<float>& buffer)
+{
+    for(auto i = 0; i < buffer.getNumChannels(); ++i)
+        processChannel(i, buffer);
+}
+
 void Dynamic_Convolution::prepare(int buffsize, double sampleRate)
 {
     //Set Important Info
@@ -26,11 +32,28 @@ void Dynamic_Convolution::prepare(int buffsize, double sampleRate)
     fftOrder = std::log2(fftSize);
     
     fft = std::make_unique<juce::dsp::FFT>(fftOrder);
+
     
     //Size Buffers and Arrays
-    FFTbuffer.resize(sizeTimesTwo);
-    summedFFT.resize(sizeTimesTwo);
-    overlapBuffer.setSize(1, buffsize);
+    
+    //Size for Stereo
+    convolutionChannelState.resize(2);
+    for(ChannelConvolutionState& channel : convolutionChannelState)
+    {
+        channel.FFTbuffer.resize(sizeTimesTwo);
+        channel.summedFFT.resize(sizeTimesTwo);
+        channel.overlapBuffer.setSize(1, buffsize);
+    }
+        
+    
+    
+//    convolutionChannelState.data()->FFTbuffer.resize(sizeTimesTwo);
+//    convolutionChannelState.data()->summedFFT.resize(sizeTimesTwo);
+//    convolutionChannelState.data()->overlapBuffer.setSize(1,buffsize);
+    
+//    FFTbufferL.resize(sizeTimesTwo);
+//    summedFFT.resize(sizeTimesTwo);
+//    overlapBuffer.setSize(1, buffsize);
 }
 
 void Dynamic_Convolution::loadNewIR(juce::File file)
@@ -72,31 +95,53 @@ void Dynamic_Convolution::createIRfft()
     //Partition size is 1/2 FFTsize,
     int partitionSize = buffersize;
     int totalSamples = irAudio.getNumSamples();
+    IRchannels = irAudio.getNumChannels();
     
     //Ensure that we get enough partitions to hold any number of samples, i.e. round up numPartitions
     numPartitions = (totalSamples + partitionSize - 1) / partitionSize;
-    juce::String pString = juce::String(numPartitions);
     numPartitions = std::min(400, numPartitions);
     
     //Clear all currently loaded Data
-    clearBuffers();
+    //clearBuffers();
+    
+    
+    
+    for(ChannelConvolutionState& channel : convolutionChannelState)
+    {
+        channel.clearAll();
+        resizeMatrix(channel.IrPartitions, (size_t) numPartitions + 1, (size_t) fftSize * 2);
+        resizeMatrix(channel.inputFFTbuffer, (size_t) numPartitions + 1, (size_t) fftSize * 2);
+    }
     
     //resize matrices
-    resizeMatrix(IRffts, (size_t) numPartitions + 1, (size_t) fftSize * 2);
-    resizeMatrix(inputFFTbuffer, (size_t) numPartitions + 1, (size_t) fftSize * 2);
+//    resizeMatrix(IrPartitionsL, (size_t) numPartitions + 1, (size_t) fftSize * 2);
+//    resizeMatrix(inputFFTbufferL, (size_t) numPartitions + 1, (size_t) fftSize * 2);
     
-    auto size = IRffts.size();
+    juce::String size = juce::String(convolutionChannelState.data()->IrPartitions.size());
+    juce::String fftSize = juce::String(convolutionChannelState.data()->FFTbuffer.size());
     
-    juce::String myString = juce::String(size);
-    juce::String newString = juce::String(partitionSize);
-    juce::String sString = juce::String(totalSamples);
+    DBG("IR Partition Size = " + size);
+    DBG("FFT Buffer Size = " + fftSize);
     
-    juce::Logger::writeToLog("vector size = " + myString);
-    juce::Logger::writeToLog("partitionSize = " + newString);
-    juce::Logger::writeToLog("numPartitions = " + pString);
-    juce::Logger::writeToLog("num samps = " + sString);
     
     //Copy data from loaded IR and split into partitions
+    for(auto i = 0; i < IRchannels; ++i)
+        partitionIR(partitionSize, totalSamples, i, convolutionChannelState[i]);
+    
+    DBG("Not HERE!");
+        
+//    partitionIR(partitionSize, totalSamples, 0, IrPartitionsL);
+//    if (IRchannels > 1)
+//        partitionIR(partitionSize, totalSamples, 1, IrPartitionsR);
+    
+    juce::Logger::writeToLog("IR FFT Created Successfully!");
+    IRloaded = true;
+}
+
+void Dynamic_Convolution::partitionIR(int partitionSize, int totalSamples, int channel, ChannelConvolutionState& state)
+{
+    std::vector<std::vector<float>>& partitionBuffer = state.IrPartitions;
+    
     for(auto i = 0; i < numPartitions; ++i)
     {
         for(auto j = 0; j < partitionSize; ++j)
@@ -105,96 +150,159 @@ void Dynamic_Convolution::createIRfft()
             if(index < totalSamples)
             {
                 //only copy first channel for now
-                IRffts[i][j] = irAudio.getSample(0, index);
+                partitionBuffer[i][j] = irAudio.getSample(channel, index);
             }else
-                IRffts[i][j] = 0.0f;
+                partitionBuffer[i][j] = 0.0f;
         }
         //perform fft on each partition
-        fft->performRealOnlyForwardTransform(IRffts[i].data());
+        fft->performRealOnlyForwardTransform(partitionBuffer[i].data());
     }
-    
-    juce::Logger::writeToLog("IR FFT Created Successfully!");
-    IRloaded = true;
 }
 
 void Dynamic_Convolution::clearBuffers()
 {
-    for(auto& inner : inputFFTbuffer)
+    
+    for(auto& inner : inputFFTbufferL)
         juce::FloatVectorOperations::clear(inner.data(), inner.size());
     
-    for(auto& inner : IRffts)
+    for(auto& inner : IrPartitionsL)
         juce::FloatVectorOperations::clear(inner.data(), inner.size());
     
-    juce::FloatVectorOperations::clear(FFTbuffer.data(), FFTbuffer.size());
+    for(auto& inner : IrPartitionsR)
+        juce::FloatVectorOperations::clear(inner.data(), inner.size());
+    
+    juce::FloatVectorOperations::clear(FFTbufferL.data(), FFTbufferL.size());
     juce::FloatVectorOperations::clear(summedFFT.data(), summedFFT.size());
 }
 
-void Dynamic_Convolution::process(juce::AudioBuffer<float>& buffer)
+void Dynamic_Convolution::processChannel(int channel, juce::AudioBuffer<float>& buffer)
 {
     jassert(buffer.getNumSamples() == fftSize/2);
     
     if(!IRloaded)
         return;
     
+    
+    
     float filePos = filePosition.load();
     float fileLen = fileLength.load();
     float dw = dryWet.load();
     
+    
+    ChannelConvolutionState& state = convolutionChannelState[channel];
+    
+    std::vector<float>& fftBuffer = state.FFTbuffer;
+    
+    
+    
     //zero pad data and copy input
-    juce::FloatVectorOperations::clear(FFTbuffer.data(), FFTbuffer.size());
-    juce::FloatVectorOperations::copy(FFTbuffer.data(), buffer.getReadPointer(0), buffer.getNumSamples());
-    juce::FloatVectorOperations::clear(summedFFT.data(), summedFFT.size());
+//    juce::FloatVectorOperations::clear(FFTbufferL.data(), FFTbufferL.size());
+//    juce::FloatVectorOperations::clear(summedFFT.data(), summedFFT.size());
+    juce::FloatVectorOperations::clear(state.FFTbuffer.data(), state.FFTbuffer.size());
+    juce::FloatVectorOperations::clear(state.summedFFT.data(), state.summedFFT.size());
+    
+    DBG("not here either...");
+    
+    //state.clearFFTbuffers();
+    
+    
+    
+    juce::FloatVectorOperations::copy(fftBuffer.data(), buffer.getReadPointer(channel), buffer.getNumSamples());
+    
+    
+    DBG("nope, not here");
+    
     
     //perform FFT and add to buffer
-    fft->performRealOnlyForwardTransform(FFTbuffer.data());
-    addNewInputFFT(FFTbuffer);
+    fft->performRealOnlyForwardTransform(fftBuffer.data());
+    addNewInputFFT(state);
+    
+    
+    
+    
     
     //Indexes for Moving File
     int startIndx = filePos * numPartitions;
     int endIndx = fileLen * numPartitions + startIndx;
     endIndx = endIndx > numPartitions ? numPartitions : endIndx;
     
-    for(int i = startIndx;  i < endIndx; i++)
-    {
-        auto currentFFTindex = ((inputFftIndex - 1 + numPartitions) - (i - startIndx)) % numPartitions;
-        
-        multiplyFFTs(inputFFTbuffer[currentFFTindex], IRffts[i], FFTbuffer);
-        
-        juce::FloatVectorOperations::multiply(FFTbuffer.data(), 1.0/numPartitions, FFTbuffer.size());
-        juce::FloatVectorOperations::add(summedFFT.data(), FFTbuffer.data(), FFTbuffer.size());
-    }
+    
+    createSummedFFT(startIndx, endIndx, state);
+    
+    
+    
+//    for(int i = startIndx;  i < endIndx; i++)
+//    {
+//        auto currentFFTindex = ((state.fftIndex - 1 + numPartitions) - (i - startIndx)) % numPartitions;
+//
+//        multiplyFFTs(inputFFTbufferL[currentFFTindex], IrPartitionsL[i], FFTbufferL);
+//
+//        juce::FloatVectorOperations::multiply(FFTbufferL.data(), 1.0/numPartitions, FFTbufferL.size());
+//        juce::FloatVectorOperations::add(summedFFT.data(), FFTbufferL.data(), FFTbufferL.size());
+//    }
     
     //perform IFT on sum
-    fft->performRealOnlyInverseTransform(summedFFT.data());
+    fft->performRealOnlyInverseTransform(state.summedFFT.data());
 
-    auto* in = buffer.getWritePointer(0);
-    auto* out = buffer.getWritePointer(0);
-    auto* out2 = buffer.getWritePointer(1);
-    auto* overlap = overlapBuffer.getReadPointer(0);
+    auto* in = buffer.getWritePointer(channel);
+    auto* out = buffer.getWritePointer(channel);
+    auto* overlap = state.overlapBuffer.getReadPointer(0);
     
     //Sum result and last overlap
     for(auto i = 0; i < buffersize; ++i)
     {
-        out[i] = (summedFFT[i] + overlap[i]) * dw + in[i]* (1-dw);
-        out2[i] = (summedFFT[i] + overlap[i]) * dw + in[i]* (1-dw);
+        out[i] = (state.summedFFT[i] + overlap[i]) * dw + in[i]* (1-dw);
     }
     
+    storeOverlap(state);
+    
+    
+    
+    
     //copy second quarter of array
-    auto quarterArray = summedFFT.size()/4 ;
-    juce::FloatVectorOperations::copy(overlapBuffer.getWritePointer(0), summedFFT.data() + quarterArray, overlapBuffer.getNumSamples());
+//    auto quarterArray = summedFFT.size()/4 ;
+//    juce::FloatVectorOperations::copy(overlapBuffer.getWritePointer(0), summedFFT.data() + quarterArray, overlapBuffer.getNumSamples());
 }
 
-void Dynamic_Convolution::addNewInputFFT(std::vector<float>& input)
+void Dynamic_Convolution::createSummedFFT(int startIndex, int endIndex, ChannelConvolutionState& state)
 {
-    auto size = inputFFTbuffer.size();
-    
-    if (inputFftIndex >= size)
-        inputFftIndex = 0; // Wrap before use
-    
-    //copy data from input to buffer
-    juce::FloatVectorOperations::copy(inputFFTbuffer[inputFftIndex].data(), input.data(), size);
+    for(int i = startIndex;  i < endIndex; i++)
+    {
+        auto currentFFTindex = ((state.fftIndex - 1 + numPartitions) - (i - startIndex)) % numPartitions;
+        
+//        multiplyFFTs(inputFFTbufferL[currentFFTindex], IrPartitionsL[i], FFTbufferL);
+        
+        multiplyFFTs(state.inputFFTbuffer[currentFFTindex], state.IrPartitions[i], state.FFTbuffer);
+        
+        juce::FloatVectorOperations::multiply(state.FFTbuffer.data(), 1.0/numPartitions, state.FFTbuffer.size());
+        juce::FloatVectorOperations::add(state.summedFFT.data(), state.FFTbuffer.data(), state.FFTbuffer.size());
+    }
+}
 
-    inputFftIndex += 1;
+void Dynamic_Convolution::storeOverlap(ChannelConvolutionState& state)
+{
+    auto quarterArray = state.summedFFT.size()/4 ;
+    juce::FloatVectorOperations::copy(state.overlapBuffer.getWritePointer(0), state.summedFFT.data() + quarterArray, state.overlapBuffer.getNumSamples());
+}
+
+void Dynamic_Convolution::addNewInputFFT(ChannelConvolutionState& state)
+{
+    auto size = state.inputFFTbuffer.size();
+    
+    if(state.fftIndex >= size)
+        state.fftIndex = 0;
+    
+    juce::FloatVectorOperations::copy(state.inputFFTbuffer[state.fftIndex].data(), state.FFTbuffer.data(), size);
+    state.fftIndex += 1;
+//    auto size = inputFFTbufferL.size();
+//
+//    if (inputFftIndex >= size)
+//        inputFftIndex = 0; // Wrap before use
+//
+//    //copy data from input to buffer
+//    juce::FloatVectorOperations::copy(inputFFTbufferL[inputFftIndex].data(), input.data(), size);
+//
+//    inputFftIndex += 1;
 }
 
 void Dynamic_Convolution::multiplyFFTs(const std::vector<float>& input, const std::vector<float>& irFFT, std::vector<float>& result)
