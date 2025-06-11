@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <JuceHeader.h>
 #include <complex.h>
+#include <memory.h>
 
 
 class Dynamic_Convolution : juce::AudioProcessorValueTreeState::Listener
@@ -24,22 +25,24 @@ public:
         std::vector<float> FFTbuffer;
         std::vector<float> summedFFT;
         
-        std::vector<std::vector<float>> IrPartitions;
+        std::shared_ptr<std::vector<std::vector<float>>> IrPartitions;
         std::vector<std::vector<float>> inputFFTbuffer;
         
         juce::AudioBuffer<float> overlapBuffer;;
         
         void clearAll()
         {
-            juce::FloatVectorOperations::clear(FFTbuffer.data(), FFTbuffer.size());
-            juce::FloatVectorOperations::clear(summedFFT.data(), summedFFT.size());
+            clearFFTbuffers();
             overlapBuffer.clear();
             
             for(auto& inner : inputFFTbuffer)
                 juce::FloatVectorOperations::clear(inner.data(), inner.size());
             
-            for(auto& inner : IrPartitions)
-                juce::FloatVectorOperations::clear(inner.data(), inner.size());
+            if(IrPartitions != nullptr)
+            {
+                for(auto& inner : *IrPartitions)
+                    juce::FloatVectorOperations::clear(inner.data(), inner.size());
+            }
         }
         
         void clearFFTbuffers()
@@ -58,7 +61,7 @@ public:
     void resizeMatrix(std::vector<std::vector<float>>& matrix, size_t outside, size_t inside);
     
     virtual void createIRfft();
-    void partitionIR(int partitionSize, int totalSamples, int channel, ChannelConvolutionState& state);
+    void partitionIR(int partitionSize, int totalSamples, int channel, std::vector<std::vector<float>>& matrixToFill);
     void clearBuffers();
     virtual void processChannel(int channel, juce::AudioBuffer<float>& buffer);
     void addNewInputFFT(ChannelConvolutionState& convolutionState);
