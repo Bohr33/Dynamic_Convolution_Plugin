@@ -52,6 +52,9 @@ void Dynamic_Convolution::loadNewIR(juce::File file)
 {
     std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
     
+    //turn off flag when a new file is being loaded.
+    IRloaded = false;
+    
     if(reader == nullptr)
     {
         juce::Logger::writeToLog("Error: IR failed to load...\n");
@@ -91,14 +94,17 @@ void Dynamic_Convolution::createIRfft()
     
     //Ensure that we get enough partitions to hold any number of samples, i.e. round up numPartitions
     numPartitions = (totalSamples + partitionSize - 1) / partitionSize;
-    numPartitions = std::min(400, numPartitions);
+    
+    DBG("num Partitions = " + juce::String(numPartitions));
     
     //resize matrices
     for(ChannelConvolutionState& channel : convolutionChannelState)
     {
-        channel.clearAll();
+//        channel.clearAll();
         resizeMatrix(channel.inputFFTbuffer, (size_t) numPartitions + 1, (size_t) fftSize * 2);
     }
+    
+    DBG("NOTE HERE");
     
     for(auto i = 0; i < IRchannels; ++i)
     {
@@ -135,22 +141,6 @@ void Dynamic_Convolution::partitionIR(int partitionSize, int totalSamples, int c
     }
 }
 
-void Dynamic_Convolution::clearBuffers()
-{
-    
-    for(auto& inner : inputFFTbufferL)
-        juce::FloatVectorOperations::clear(inner.data(), inner.size());
-    
-    for(auto& inner : IrPartitionsL)
-        juce::FloatVectorOperations::clear(inner.data(), inner.size());
-    
-    for(auto& inner : IrPartitionsR)
-        juce::FloatVectorOperations::clear(inner.data(), inner.size());
-    
-    juce::FloatVectorOperations::clear(FFTbufferL.data(), FFTbufferL.size());
-    juce::FloatVectorOperations::clear(summedFFT.data(), summedFFT.size());
-}
-
 void Dynamic_Convolution::processChannel(int channel, juce::AudioBuffer<float>& buffer)
 {
     jassert(buffer.getNumSamples() == fftSize/2);
@@ -164,6 +154,23 @@ void Dynamic_Convolution::processChannel(int channel, juce::AudioBuffer<float>& 
     
     ChannelConvolutionState& state = convolutionChannelState[channel];
     
+    float* convolved = convolve(buffer, channel, state, filePos, fileLen);
+
+    auto* in = buffer.getWritePointer(channel);
+    auto* out = buffer.getWritePointer(channel);
+    auto* overlap = state.overlapBuffer.getReadPointer(0);
+    
+    //Sum result and last overlap
+    for(auto i = 0; i < buffersize; ++i)
+    {
+        out[i] = (convolved[i] + overlap[i]) * dw + in[i] * (1-dw);
+    }
+    
+    storeOverlap(state);
+}
+
+float* Dynamic_Convolution::convolve(juce::AudioBuffer<float>& buffer, int channel, ChannelConvolutionState& state, float filePos, float fileLen)
+{
     std::vector<float>& fftBuffer = state.FFTbuffer;
     
     //zero pad data and copy input
@@ -175,29 +182,17 @@ void Dynamic_Convolution::processChannel(int channel, juce::AudioBuffer<float>& 
     fft->performRealOnlyForwardTransform(fftBuffer.data());
     addNewInputFFT(state);
 
-    
     //Indexes for Moving File
     int startIndx = filePos * numPartitions;
     int endIndx = fileLen * numPartitions + startIndx;
     endIndx = endIndx > numPartitions ? numPartitions : endIndx;
     
-    
     createSummedFFT(startIndx, endIndx, state);
     
     //perform IFT on sum
     fft->performRealOnlyInverseTransform(state.summedFFT.data());
-
-    auto* in = buffer.getWritePointer(channel);
-    auto* out = buffer.getWritePointer(channel);
-    auto* overlap = state.overlapBuffer.getReadPointer(0);
     
-    //Sum result and last overlap
-    for(auto i = 0; i < buffersize; ++i)
-    {
-        out[i] = (state.summedFFT[i] + overlap[i]) * dw + in[i] * (1-dw);
-    }
-    
-    storeOverlap(state);
+    return state.summedFFT.data();
 }
 
 void Dynamic_Convolution::createSummedFFT(int startIndex, int endIndex, ChannelConvolutionState& state)

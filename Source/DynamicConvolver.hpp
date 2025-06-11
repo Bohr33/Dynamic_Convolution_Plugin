@@ -62,7 +62,7 @@ public:
     
     virtual void createIRfft();
     void partitionIR(int partitionSize, int totalSamples, int channel, std::vector<std::vector<float>>& matrixToFill);
-    void clearBuffers();
+    
     virtual void processChannel(int channel, juce::AudioBuffer<float>& buffer);
     void addNewInputFFT(ChannelConvolutionState& convolutionState);
     void multiplyFFTs(const std::vector<float>& input, const std::vector<float>& irFFT, std::vector<float>& result);
@@ -76,6 +76,8 @@ public:
     
     void process(juce::AudioBuffer<float>& buffer);
     
+    float* convolve(juce::AudioBuffer<float>& buffer, int channel, ChannelConvolutionState& convolutionState, float filePos, float fileLen);
+    
     
     
 private:
@@ -88,15 +90,16 @@ private:
     
     bool IRloaded = false;
     
+    //Parameters
     std::atomic<float> filePosition{0.0};
     std::atomic<float> fileLength{1.0};
     std::atomic<float> dryWet{0.5};
     
+    float currentFilePos;
+    float currentFileLength;
+    
     juce::AudioFormatManager formatManager;
     juce::AudioProcessorValueTreeState& valueTreeState;
-    
-    
-
     
     //Convolution State
     std::vector<ChannelConvolutionState> convolutionChannelState;
@@ -104,20 +107,8 @@ private:
     //FFT Object
     std::unique_ptr<juce::dsp::FFT> fft;
     
-    //arrays for FFTs and summed Result
-    std::vector<float> FFTbufferL, FFTbufferR;
-    std::vector<float> summedFFT;
-    
-    //IR Audio and overlap Buffer
+    //IR Audio
     juce::AudioBuffer<float> irAudio;
-    juce::AudioBuffer<float> overlapBuffer;
-    
-    //IR Partition Array and Input Buffer
-    std::vector<std::vector<float>> IrPartitionsL, IrPartitionsR;
-    
-    std::vector<std::vector<float>> inputFFTbufferL, inputFFTbufferR;
-    
-    int inputFftIndex = 0;
     
 };
 
