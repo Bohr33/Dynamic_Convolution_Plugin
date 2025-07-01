@@ -21,11 +21,6 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     openButton.setButtonText("Open");
     openButton.onClick = [this] {openButtonClicked();};
     
-    addAndMakeVisible(&reverseButton);
-    reverseButton.setButtonText("Reverse");
-    reverseButton.onClick = [this] {reverseButtonClicked();};
-    
-    
     filePosAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "filepos", filePosSlider));
     filePosSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     filePosSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -91,7 +86,7 @@ void Dynamic_ConvolverAudioProcessorEditor::resized()
     fileHighlight->setBounds(thumbnailBounds);
     
     openButton.setBounds(20, getHeight()-190, getWidth()-40, 20);
-    reverseButton.setBounds(20, height-150, 50, 20);
+    
     
     filePosSlider.setBounds(knobsX, knobY, knobWidth, knobHeight);
     fPosLabel.setBounds(knobsX, labelY, knobWidth, labelHeight);
@@ -175,10 +170,4 @@ void Dynamic_ConvolverAudioProcessorEditor::openButtonClicked()
         }
     }
     );
-}
-
-void Dynamic_ConvolverAudioProcessorEditor::reverseButtonClicked()
-{
-    reverseState = !reverseState;
-    repaint();
 }

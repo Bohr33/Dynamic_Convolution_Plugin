@@ -100,11 +100,9 @@ void Dynamic_Convolution::createIRfft()
     //resize matrices
     for(ChannelConvolutionState& channel : convolutionChannelState)
     {
-//        channel.clearAll();
+        channel.clearAll();
         resizeMatrix(channel.inputFFTbuffer, (size_t) numPartitions + 1, (size_t) fftSize * 2);
     }
-    
-    DBG("NOTE HERE");
     
     for(auto i = 0; i < IRchannels; ++i)
     {

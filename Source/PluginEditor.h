@@ -62,11 +62,7 @@ private:
     juce::Label dwLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryWetAttch;
     
-    juce::TextButton reverseButton;
-    bool reverseState = false;
-    
     //Custom Graphics Component
-//    FileHighlight fileHighlight;
     std::unique_ptr<FileHighlight> fileHighlight;
     
     std::unique_ptr<juce::FileChooser> fileChooser;
