@@ -1,13 +1,13 @@
-#Dynamic Convolution Plugin
+# Dynamic Convolution Plugin
 The Dynamic Convolution plugin is a convolution plugin with additional controls over the location of the file being convolved. It allows you to upload a selcted file of any standard format (.aiff, .wav) and performs real-time convolution on the input with the file. The location of the file where convolution is being performed can be changed in-real time (although changes are not smooth). It was built using the JUCE framework. 
 
 The project source can be found on my Github here:
 https://github.com/Bohr33/Dynamic_Convolution_Plugin.git
 
-###Building the Plugin
+### Building the Plugin
 In the repository you will find the source code and the .jucer file. To build the plugin you will need JUCE, and the proJucer installed. Once these are installed, you can launch the project via the Pro-Jucer and open in your selected IDE. From there, simply build the project and it should appear as an available VST or AU plugin, depending on your selected build type.
 
-##Controls
+## Controls
 There are 3 main controls to the plugin.
 
 **File Position**: This controls where convolution of the file will begin. Changes to this control will be shown and updated on the file display window.
@@ -18,10 +18,10 @@ There are 3 main controls to the plugin.
 
 To upload a file, simply press the "Open" button below the file display window and select a file. 
 
-##Implementation
+## Implementation
 The convolution process is implemented via a partitioned convolution algorithm. Details on this process can be found in the Dynamic_Convolution.cpp and header file. 
 
-###Dynamic_Convolution Class
+### Dynamic_Convolution Class
 The Dynamic_Convolution class performs the bulk of the processing. A custom structure was created to manage the buffers used for the convolution process. This structure manages one channel of the convolution process, so two are used for stereo processing. Each processing function takes the Convolution channel structure as an argument.
 
 A general outline of the process is as follows:
