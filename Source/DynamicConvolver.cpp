@@ -33,7 +33,6 @@ void Dynamic_Convolution::prepare(int buffsize, double sampleRate)
     
     fft = std::make_unique<juce::dsp::FFT>(fftOrder);
 
-    
     //Size Buffers and Arrays
     //Size for Stereo
     convolutionChannelState.resize(2);
