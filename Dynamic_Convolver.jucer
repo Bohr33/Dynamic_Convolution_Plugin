@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="nIrAUm" name="Dynamic_Convolver" projectType="audioplug"
-              useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+              useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1"
+              cppLanguageStandard="20">
   <MAINGROUP id="D3P5RM" name="Dynamic_Convolver">
     <GROUP id="{1A2E5F99-AFCE-2A56-DA8A-8F4517D4FF7F}" name="Source">
       <FILE id="wnOB4Q" name="PluginProcessor.cpp" compile="1" resource="0"

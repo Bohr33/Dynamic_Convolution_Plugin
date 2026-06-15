@@ -11,75 +11,75 @@
 #include <stdio.h>
 #include <JuceHeader.h>
 #include <complex.h>
+#include <span>
 
-
-class Convolution
-{
-public:
-
-    Convolution()
-    {
-        formatManager.registerBasicFormats();
-    }
-    
-    void loadNewIR(juce::File file)
-    {
-        auto& conv = processorChain.template get<convIndex>();
-        conv.loadImpulseResponse(file, juce::dsp::Convolution::Stereo::yes,
-            juce::dsp::Convolution::Trim::no,
-            0);
-    }
-    
-    template <typename ProcessContext>
-    void process(const ProcessContext& context) noexcept
-    {
-        auto& conv = processorChain.template get<convIndex>();
-        if(conv.getCurrentIRSize() > 0)
-            processorChain.process(context);
-    }
-    
-    void prepare(const juce::dsp::ProcessSpec& spec)
-    {
-        processorChain.prepare(spec);
-    }
-    
-    void reset()
-    {
-        processorChain.reset();
-    }
-    
-    
-private:
-    enum
-    {
-        convIndex
-    };
-    
-    std::unique_ptr<juce::FileChooser> chooser;
-    juce::AudioFormatManager formatManager;
-    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
-    
-    juce::dsp::ProcessorChain<juce::dsp::Convolution> processorChain;
-};
+//class Convolution
+//{
+//public:
+//
+//    Convolution()
+//    {
+//        formatManager.registerBasicFormats();
+//    }
+//
+//    void loadNewIR(juce::File file)
+//    {
+//        auto& conv = processorChain.template get<convIndex>();
+//        conv.loadImpulseResponse(file, juce::dsp::Convolution::Stereo::yes,
+//            juce::dsp::Convolution::Trim::no,
+//            0);
+//    }
+//
+//    template <typename ProcessContext>
+//    void process(const ProcessContext& context) noexcept
+//    {
+//        auto& conv = processorChain.template get<convIndex>();
+//        if(conv.getCurrentIRSize() > 0)
+//            processorChain.process(context);
+//    }
+//
+//    void prepare(const juce::dsp::ProcessSpec& spec)
+//    {
+//        processorChain.prepare(spec);
+//    }
+//
+//    void reset()
+//    {
+//        processorChain.reset();
+//    }
+//
+//
+//private:
+//    enum
+//    {
+//        convIndex
+//    };
+//
+//    std::unique_ptr<juce::FileChooser> chooser;
+//    juce::AudioFormatManager formatManager;
+//    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
+//
+//    juce::dsp::ProcessorChain<juce::dsp::Convolution> processorChain;
+//};
 
 class Fast_Convolve
 {
 public:
     Fast_Convolve();
-    virtual ~Fast_Convolve();
+    ~Fast_Convolve();
 
-    virtual void prepare(int buffsize, double sampleRate);
-    virtual void loadNewIR(juce::File file);
+    void prepare(int buffsize);
+    void loadNewIR(juce::File file);
     void resizeMatrix(std::vector<std::vector<float>>& matrix, size_t outside, size_t inside);
     
-    virtual void createIRfft();
+    void createIRfft();
     void clearBuffers();
-    virtual void getNextSampleBlock(juce::AudioBuffer<float>& buffer);
+    void getNextSampleBlock(juce::AudioBuffer<float>& buffer);
     void addNewInputFFT(std::vector<float>& input);
     void multiplyFFTs(const std::vector<float>& input, const std::vector<float>& irFFT, std::vector<float>& result);
     
 private:
-    int buffersize;
+    int bufferSize;
     int fftSize;
     int fftOrder;
     
@@ -112,6 +112,71 @@ private:
     //Overlap Buffer
     juce::AudioBuffer<float> overlapBuffer;
 };
+
+
+
+class FastConvolveV2
+{
+public:
+
+    void prepare(int buffsize);
+//    void loadNewIR(juce::File file);
+    void loadNewIR(std::span<float> newData);
+    
+//    void getNextSampleBlock(juce::AudioBuffer<float>& buffer);
+    void processBlock(std::span<float> buffer);
+    
+    
+    
+
+    
+private:
+    
+    void clearBuffers();
+    void createIRfft();
+    void resizeMatrix(std::vector<std::vector<float>>& matrix, size_t outside, size_t inside);
+    
+    //Convolution Functions -- Called by processBlock
+    void addNewInputFFT(std::span<float> newFFT);
+    void multiplyFFTs(const std::span<float> input, const std::span<float> irFFT, std::span<float> output);
+    
+    
+    int bufferSize;
+    int fftSize;
+    int fftOrder;
+    
+    int numPartitions = 0;
+    int fftIndex = 0;
+    
+    bool IRloaded = false;
+    
+    juce::AudioFormatManager formatManager;
+    
+    //FFT Object
+    std::unique_ptr<juce::dsp::FFT> fft;
+    
+    //arrays for FFTs
+    std::vector<float> fftBuffer;
+    
+    //output FFT Array
+    std::vector<float> summedFFT;
+    
+    //IR Raw Data
+    juce::AudioBuffer<float> irAudio;
+    std::vector<float> irData; // Will replace above JUCE BUffer
+    
+    //IR FFT Results / Convolution Buffer
+    std::vector<std::vector<float>> IRffts;
+    
+    //Input FFT Array
+    std::vector<std::vector<float>> inputFFTbuffer;
+    int inputFftIndex = 0;
+    
+    //Overlap Buffer
+//    juce::AudioBuffer<float> overlapBuffer;
+    std::vector<float> overlapBuffer;
+};
+
 
 //void timeDomainConvolution(juce::AudioBuffer<float>& buffer)
 //{
