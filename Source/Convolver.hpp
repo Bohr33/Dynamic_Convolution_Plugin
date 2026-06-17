@@ -121,7 +121,7 @@ public:
 
     void prepare(int buffsize);
 //    void loadNewIR(juce::File file);
-    void loadNewIR(std::span<float> newData);
+    void loadNewIR(std::span<const float> newData);
     
 //    void getNextSampleBlock(juce::AudioBuffer<float>& buffer);
     void processBlock(std::span<float> buffer);
@@ -192,5 +192,6 @@ private:
 //        }
 //    }
 //}
+
 
 #endif /* Convolver_hpp */

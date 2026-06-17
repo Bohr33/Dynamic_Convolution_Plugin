@@ -218,7 +218,7 @@ void FastConvolveV2::prepare(int buffsize)
 
 
 
-void FastConvolveV2::loadNewIR(std::span<float> newData)
+void FastConvolveV2::loadNewIR(std::span<const float> newData)
 {
     if (newData.empty())
         return;

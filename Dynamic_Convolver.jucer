@@ -9,6 +9,10 @@
             file="Source/PluginProcessor.cpp"/>
       <FILE id="RN77Fw" name="Convolver.cpp" compile="1" resource="0" file="Source/Convolver.cpp"/>
       <FILE id="ovQ6c9" name="Convolver.hpp" compile="0" resource="0" file="Source/Convolver.hpp"/>
+      <FILE id="WQTcdW" name="ConvolutionEffects.cpp" compile="1" resource="0"
+            file="Source/ConvolutionEffects.cpp"/>
+      <FILE id="MQGeJn" name="ConvolutionEffects.h" compile="0" resource="0"
+            file="Source/ConvolutionEffects.h"/>
       <FILE id="LUeDLY" name="DynamicConvolver.cpp" compile="1" resource="0"
             file="Source/DynamicConvolver.cpp"/>
       <FILE id="xYCJ8K" name="DynamicConvolver.hpp" compile="0" resource="0"

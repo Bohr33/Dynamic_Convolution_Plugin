@@ -166,7 +166,8 @@ void Dynamic_ConvolverAudioProcessorEditor::openButtonClicked()
                 auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
                 thumbnail.setSource(new juce::FileInputSource (file));
             }
-            audioProcessor.d_conv->loadNewIR(file);
+//            audioProcessor.d_conv->loadNewIR(file);
+            audioProcessor.e_conv->loadFileAsIR(file);
         }
     }
     );

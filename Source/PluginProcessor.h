@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "Convolver.hpp"
 #include "DynamicConvolver.hpp"
+#include "ConvolutionEffects.h"
 
 //==============================================================================
 /**
@@ -62,6 +63,7 @@ public:
 //    Fast_Convolve f_conv;
 //    Dynamic_Convolution d_conv;
     std::unique_ptr<FastConvolveV2> f_conv;
+    std::unique_ptr<ConvolutionEffect> e_conv;
     std::unique_ptr<Dynamic_Convolution> d_conv;
     
 private:
