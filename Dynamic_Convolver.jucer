@@ -19,6 +19,10 @@
             file="Source/DynamicConvolver.hpp"/>
       <FILE id="Kad6B5" name="Graphics.cpp" compile="1" resource="0" file="Source/Graphics.cpp"/>
       <FILE id="WgRQq3" name="Graphics.hpp" compile="0" resource="0" file="Source/Graphics.hpp"/>
+      <FILE id="E0amfW" name="DynamicConvolverV2.cpp" compile="1" resource="0"
+            file="Source/DynamicConvolverV2.cpp"/>
+      <FILE id="Asx4qx" name="DynamicConvolverV2.h" compile="0" resource="0"
+            file="Source/DynamicConvolverV2.h"/>
       <FILE id="hpFHb9" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
       <FILE id="GKBy8Y" name="PluginEditor.cpp" compile="1" resource="0"
