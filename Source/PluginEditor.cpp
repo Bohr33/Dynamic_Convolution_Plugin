@@ -21,15 +21,15 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     openButton.setButtonText("Open");
     openButton.onClick = [this] {openButtonClicked();};
     
-    filePosAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "filepos", filePosSlider));
+    filePosAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "FILE_POS", filePosSlider));
     filePosSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     filePosSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
-    fileLenAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "filelength", fileLengthSlider));
+    fileLenAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "FILE_LEN", fileLengthSlider));
     fileLengthSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     fileLengthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
-    dryWetAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "drywet", dryWetSlider));
+    dryWetAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "DRY_WET", dryWetSlider));
     dryWetSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     dryWetSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
@@ -167,7 +167,8 @@ void Dynamic_ConvolverAudioProcessorEditor::openButtonClicked()
                 thumbnail.setSource(new juce::FileInputSource (file));
             }
 //            audioProcessor.d_conv->loadNewIR(file);
-            audioProcessor.e_conv->loadFileAsIR(file);
+//            audioProcessor.e_conv->loadFileAsIR(file);
+            audioProcessor.d2_conv->loadFileAsIR(file);
         }
     }
     );

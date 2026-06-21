@@ -43,8 +43,6 @@ private:
     
     bool IRloaded = false;
     
-    juce::AudioFormatManager formatManager;
-    
     //FFT Object
     std::unique_ptr<juce::dsp::FFT> fft;
     

@@ -25,6 +25,10 @@
             file="Source/DynamicConvolverV2.h"/>
       <FILE id="hpFHb9" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
+      <FILE id="XD0lLG" name="DynamicConvolutionEffect.cpp" compile="1" resource="0"
+            file="Source/DynamicConvolutionEffect.cpp"/>
+      <FILE id="IYWF1p" name="DynamicConvolutionEffect.h" compile="0" resource="0"
+            file="Source/DynamicConvolutionEffect.h"/>
       <FILE id="GKBy8Y" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="gug4bE" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
