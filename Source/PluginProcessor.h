@@ -61,12 +61,6 @@ public:
     
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
-//    Convolution convolver;
-//    Fast_Convolve f_conv;
-//    Dynamic_Convolution d_conv;
-//    std::unique_ptr<FastConvolveV2> f_conv;
-//    std::unique_ptr<ConvolutionEffect> e_conv;
-//    std::unique_ptr<Dynamic_Convolution> d_conv;
     std::unique_ptr<DynamicConvolutionEffect> d2_conv;
     
 private:

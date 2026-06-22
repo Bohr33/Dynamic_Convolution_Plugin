@@ -23,11 +23,6 @@ Dynamic_ConvolverAudioProcessor::Dynamic_ConvolverAudioProcessor()
         parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
 #endif
 {
-//    filePosParameter = parameters.getRawParameterValue("FILE_POS");
-//    fileLengthParameter = parameters.getRawParameterValue("FILE_LEN");
-//    d_conv = std::make_unique<Dynamic_Convolution>(parameters);
-//    f_conv = std::make_unique<FastConvolveV2>();
-//    e_conv = std::make_unique<ConvolutionEffect>();
     d2_conv = std::make_unique<DynamicConvolutionEffect>(parameters);
 }
 
@@ -115,20 +110,10 @@ void Dynamic_ConvolverAudioProcessor::changeProgramName (int index, const juce::
 //==============================================================================
 void Dynamic_ConvolverAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    
-//    juce::dsp::ProcessSpec spec;
-//    spec.sampleRate = getSampleRate();
-//    spec.numChannels = 2;
-//    spec.maximumBlockSize = getBlockSize();
-//    convolver.prepare(spec);
-//    convolver.reset();
-//    f_conv.prepare(samplesPerBlock, sampleRate);
-//    d_conv->prepare(samplesPerBlock, sampleRate);
+
+
     d2_conv->prepare(samplesPerBlock);
-//    f_conv->prepare(samplesPerBlock);
-//    e_conv->prepare(samplesPerBlock);
+
 }
 
 void Dynamic_ConvolverAudioProcessor::releaseResources()
@@ -170,13 +155,9 @@ void Dynamic_ConvolverAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
 
 //    std::span<float> channelSpan {buffer.getWritePointer(0), static_cast<size_t>( buffer.getNumSamples()) };
     
-//    e_conv->processBlock(buffer);
-//    f_conv->processBlock(channelSpan);
     d2_conv->processBlock(buffer);
     
 //    juce::FloatVectorOperations::copy(buffer.getWritePointer(1), buffer.getReadPointer(0), buffer.getNumSamples());
-    
-//    d_conv->process(buffer);
 }
 
 //==============================================================================
