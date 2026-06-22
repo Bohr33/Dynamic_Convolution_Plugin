@@ -41,8 +41,11 @@ private:
     //Convolution Functions -- Called by processBlock
     void addNewInputFFT(std::span<float> newFFT);
     void multiplyFFTs(const std::span<float> input, const std::span<float> irFFT, std::span<float> output);
+    void convolveWithWindow(int startIndex, int endIndex);
     
-    
+
+    //FFT Object
+    std::unique_ptr<juce::dsp::FFT> fft;
     
     int bufferSize;
     int fftSize;
@@ -52,32 +55,26 @@ private:
     
     bool IRloaded = false;
     
-    //FFT Object
-    std::unique_ptr<juce::dsp::FFT> fft;
     
+    std::vector<float> irData; //IR Raw Data
+    
+    std::vector<std::vector<float>> IRffts;//IR FFT Results / Convolution Buffer
+    
+
     //Basic fftBuffer to hold outputs, especially in createWindowedFFT()
     std::vector<float> fftBuffer;
+
+    std::vector<float> windowedFFT;//stores summed FFT output after convolution
     
-    //output FFT Array
-//    std::vector<float> summedFFT;
-    std::vector<float> windowedFFT;
-    
-    //IR Raw Data
-    std::vector<float> irData; // Will replace above JUCE BUffer
-    
-    //IR FFT Results / Convolution Buffer
-    std::vector<std::vector<float>> IRffts;
-    
-    //Stores FFT result from new block input
-    std::vector<std::vector<float>> inputFFTbuffer;
+
     int inputFftIndex = 0;
+    std::vector<std::vector<float>> inputFFTbuffer;//Stores FFT result from new block input
     
-    //Overlap Buffer
-    std::vector<float> overlapBuffer;
+    std::vector<float> overlapBuffer; //Stores overlaping convolution data
     
     
-    //End Fast COnv Import==========================
-    void createWindowedFFT(int startIndex, int endIndex);
+    //End Fast Conv Import==========================
+
     
     //Parameters
     std::atomic<float> filePosition{0.0};

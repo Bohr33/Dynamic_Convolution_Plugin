@@ -65,15 +65,8 @@ void DynamicConvolverV2::createIRfft()
     resizeMatrix(IRffts, (size_t) numPartitions, (size_t) fftSize * 2);
     resizeMatrix(inputFFTbuffer, (size_t) numPartitions, (size_t) fftSize * 2);
     
-    juce::String vector = juce::String(IRffts.size());
-    juce::String pString = juce::String(numPartitions);
-    juce::String newString = juce::String(partitionSize);
-    juce::String sString = juce::String(totalSamples);
-    
-    juce::Logger::writeToLog("vector size = " + vector);
-    juce::Logger::writeToLog("partitionSize = " + newString);
-    juce::Logger::writeToLog("numPartitions = " + pString);
-    juce::Logger::writeToLog("num samps = " + sString);
+    juce::Logger::writeToLog("Num IR Partitions" + juce::String(numPartitions));
+    juce::Logger::writeToLog("IR Total Samples: " + juce::String(totalSamples));
     
     //Copy data from loaded IR and split into partitions
     for(auto i = 0; i < numPartitions; ++i)
@@ -130,12 +123,12 @@ void DynamicConvolverV2::process(std::span<float> buffer)
     float fileLen = fileLength.load();
     float mixAmt = dryWet.load();
     
-    //Indexes for Moving File
-    int startIndx = filePos * numPartitions;
-    int endIndx = fileLen * numPartitions + startIndx;
+    //Indecies for Moving File
+    int startIndx = static_cast<int>(filePos * numPartitions);
+    int endIndx = static_cast<int>(fileLen * numPartitions + startIndx);
     endIndx = endIndx > numPartitions ? numPartitions : endIndx;
     
-    createWindowedFFT(startIndx, endIndx);
+    convolveWithWindow(startIndx, endIndx);
     
     //perform IFT on sum
     fft->performRealOnlyInverseTransform(windowedFFT.data());
@@ -188,7 +181,7 @@ void DynamicConvolverV2::resizeMatrix(std::vector<std::vector<float>> &matrix, s
         index.resize(inside, 0.0);
 }
 
-void DynamicConvolverV2::createWindowedFFT(int startIndex, int endIndex)
+void DynamicConvolverV2::convolveWithWindow(int startIndex, int endIndex)
 {
     for(int i = startIndex;  i < endIndex; i++)
     {
