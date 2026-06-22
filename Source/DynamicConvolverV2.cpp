@@ -136,46 +136,20 @@ void DynamicConvolverV2::process(std::span<float> buffer)
     float fileLen = fileLength.load();
     float mixAmt = dryWet.load();
     
-    //Temp Test
-//    filePos = 0.01;
-//    fileLen = 1.0;
-    
-    
-    
     //Indexes for Moving File
     int startIndx = filePos * numPartitions;
     int endIndx = fileLen * numPartitions + startIndx;
     endIndx = endIndx > numPartitions ? numPartitions : endIndx;
     
     createWindowedFFT(startIndx, endIndx);
- 
-    //loop through all input FFTS and IR FFTS, offset and multiply
-//    for(int i = 0;  i < numPartitions; i++)
-//    {
-//        int currentFFTindex = ((inputFftIndex - 1 + numPartitions) - i) % numPartitions;
-//        multiplyFFTs(inputFFTbuffer[currentFFTindex], IRffts[i], fftBuffer);
-//
-//        juce::FloatVectorOperations::multiply(fftBuffer.data(), 1.0/numPartitions, fftBuffer.size());
-//        juce::FloatVectorOperations::add(windowedFFT.data(), fftBuffer.data(), fftBuffer.size());
-//    }
     
     //perform IFT on sum
     fft->performRealOnlyInverseTransform(windowedFFT.data());
-//    fft->performRealOnlyInverseTransform(fftBuffer.data());
-
-    //================
-    //Confirmed processing works without Dynamic stuff
-    //Audio pass through worked with simple fft back and forth
-    //Issue is somewhere in the migrated code
-    
-    
-
     
     //Sum result and last overlap to output
     for(auto i = 0; i < bufferSize; ++i)
     {
-        buffer[i] = (windowedFFT[i] + overlapBuffer[i]) * dryWet + (1.0 - dryWet) * buffer[i];
-//        buffer[i] = fftBuffer[i];
+        buffer[i] = (windowedFFT[i] + overlapBuffer[i]) * mixAmt + (1.0 - mixAmt) * buffer[i];
     }
     
     //copy second quarter of array
@@ -185,14 +159,13 @@ void DynamicConvolverV2::process(std::span<float> buffer)
 
 void DynamicConvolverV2::addNewInputFFT(std::span<float> newFFT)
 {
+    inputFftIndex += 1;
+    
     if (inputFftIndex >= inputFFTbuffer.size())
         inputFftIndex = 0;
     
     //copy data from input to buffer
     juce::FloatVectorOperations::copy(inputFFTbuffer[inputFftIndex].data(), newFFT.data(), newFFT.size());
-
-    inputFftIndex += 1;
-    
 }
 
 void DynamicConvolverV2::multiplyFFTs(const std::span<float> input, const std::span<float> irFFT, std::span<float> output)
