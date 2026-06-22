@@ -54,7 +54,6 @@ private:
     int fftOrder;
     
     int numPartitions = 0;
-    int fftIndex = 0;
     
     bool IRloaded = false;
     

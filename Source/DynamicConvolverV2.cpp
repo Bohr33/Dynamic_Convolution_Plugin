@@ -134,10 +134,11 @@ void DynamicConvolverV2::process(std::span<float> buffer)
     
     float filePos = filePosition.load();
     float fileLen = fileLength.load();
+    float mixAmt = dryWet.load();
     
     //Temp Test
-    filePos = 0.0;
-    fileLen = 1.0;
+//    filePos = 0.01;
+//    fileLen = 1.0;
     
     
     
@@ -159,15 +160,22 @@ void DynamicConvolverV2::process(std::span<float> buffer)
 //    }
     
     //perform IFT on sum
-//    fft->performRealOnlyInverseTransform(windowedFFT.data());
     fft->performRealOnlyInverseTransform(windowedFFT.data());
+//    fft->performRealOnlyInverseTransform(fftBuffer.data());
 
-    auto* overlap = overlapBuffer.data();
+    //================
+    //Confirmed processing works without Dynamic stuff
+    //Audio pass through worked with simple fft back and forth
+    //Issue is somewhere in the migrated code
+    
+    
+
     
     //Sum result and last overlap to output
     for(auto i = 0; i < bufferSize; ++i)
     {
-        buffer[i] = windowedFFT[i] + overlap[i];
+        buffer[i] = (windowedFFT[i] + overlapBuffer[i]) * dryWet + (1.0 - dryWet) * buffer[i];
+//        buffer[i] = fftBuffer[i];
     }
     
     //copy second quarter of array
@@ -223,10 +231,11 @@ void DynamicConvolverV2::createWindowedFFT(int startIndex, int endIndex)
 {
     for(int i = startIndex;  i < endIndex; i++)
     {
-        auto currentFFTindex = ((fftIndex - 1 + numPartitions) - (i - startIndex)) % numPartitions;
+        auto currentFFTindex = ((inputFftIndex + numPartitions) - (i - startIndex)) % numPartitions;
         
         //Multiply Input with IR, Scale down result, add to window buffer
         multiplyFFTs(inputFFTbuffer[currentFFTindex], IRffts[i], fftBuffer);
+    
         juce::FloatVectorOperations::multiply(fftBuffer.data(), 1.0/numPartitions, fftBuffer.size());
         juce::FloatVectorOperations::add(windowedFFT.data(), fftBuffer.data(), fftBuffer.size());
     }
