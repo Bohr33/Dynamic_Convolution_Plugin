@@ -62,18 +62,15 @@ void DynamicConvolverV2::createIRfft()
     clearBuffers();
     
     //resize matrices
-    //Not sure why numPartitions + 1
-    resizeMatrix(IRffts, (size_t) numPartitions + 1, (size_t) fftSize * 2);
-    resizeMatrix(inputFFTbuffer, (size_t) numPartitions + 1, (size_t) fftSize * 2);
+    resizeMatrix(IRffts, (size_t) numPartitions, (size_t) fftSize * 2);
+    resizeMatrix(inputFFTbuffer, (size_t) numPartitions, (size_t) fftSize * 2);
     
-    size_t numPartitionsPlusOne = IRffts.size();
-    
+    juce::String vector = juce::String(IRffts.size());
     juce::String pString = juce::String(numPartitions);
-    juce::String myString = juce::String(numPartitionsPlusOne);
     juce::String newString = juce::String(partitionSize);
     juce::String sString = juce::String(totalSamples);
     
-    juce::Logger::writeToLog("vector size = " + myString);
+    juce::Logger::writeToLog("vector size = " + vector);
     juce::Logger::writeToLog("partitionSize = " + newString);
     juce::Logger::writeToLog("numPartitions = " + pString);
     juce::Logger::writeToLog("num samps = " + sString);
@@ -102,8 +99,6 @@ void DynamicConvolverV2::createIRfft()
 void DynamicConvolverV2::clearBuffers()
 {
     juce::FloatVectorOperations::clear(fftBuffer.data(), fftBuffer.size());
-    
-    
     juce::FloatVectorOperations::clear(windowedFFT.data(), windowedFFT.size());
     
     for(auto& inner : inputFFTbuffer)
@@ -111,7 +106,6 @@ void DynamicConvolverV2::clearBuffers()
     
     for(auto& inner : IRffts)
         juce::FloatVectorOperations::clear(inner.data(), inner.size());
-    
     
     juce::FloatVectorOperations::clear(overlapBuffer.data(), overlapBuffer.size());
 }
@@ -193,12 +187,6 @@ void DynamicConvolverV2::resizeMatrix(std::vector<std::vector<float>> &matrix, s
     for(auto& index : matrix)
         index.resize(inside, 0.0);
 }
-
-
-
-
-
-
 
 void DynamicConvolverV2::createWindowedFFT(int startIndex, int endIndex)
 {

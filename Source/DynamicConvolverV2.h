@@ -28,15 +28,10 @@ public:
     void prepare(int blockSize);
     void loadNewIR(std::span<const float> newData);
     void process(std::span<float> buffer);
-    
-    
-    
+
     void parameterChanged(const juce::String& parameterID, float newValue) override;
     
-    
-    
 private:
-    
     
     //From FastConvV2 ============================
     void clearBuffers();
@@ -73,12 +68,11 @@ private:
     //IR FFT Results / Convolution Buffer
     std::vector<std::vector<float>> IRffts;
     
-    //Input FFT Array
+    //Stores FFT result from new block input
     std::vector<std::vector<float>> inputFFTbuffer;
     int inputFftIndex = 0;
     
     //Overlap Buffer
-//    juce::AudioBuffer<float> overlapBuffer;
     std::vector<float> overlapBuffer;
     
     
@@ -91,12 +85,6 @@ private:
     std::atomic<float> dryWet{0.5};
     
     std::atomic<bool> newParams = false;
-    
-    
 
-    
     juce::AudioProcessorValueTreeState& valueTreeState;
-
-    
-    
 };
