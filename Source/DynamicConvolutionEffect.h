@@ -12,6 +12,10 @@
 
 #include "DynamicConvolverV2.h"
 
+
+//Wrapper Class for Dynamic Convolvutoin class
+// Handles JUCE terminology, and IR stereo handling
+
 class DynamicConvolutionEffect
 {
 public:
@@ -33,4 +37,7 @@ private:
     juce::AudioBuffer<float>IRbuffer;
     
     std::unique_ptr<DynamicConvolverV2> convEngine;
+    std::unique_ptr<DynamicConvolverV2> convEngineR;
+    
+    bool isIrStereo = false;
 };
