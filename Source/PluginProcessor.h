@@ -9,7 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "DynamicConvolverV2.h"
+#include "DynamicConvolver.h"
 #include "DynamicConvolutionEffect.h"
 
 //==============================================================================

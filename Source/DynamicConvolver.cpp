@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "DynamicConvolverV2.h"
+#include "DynamicConvolver.h"
 
 
 

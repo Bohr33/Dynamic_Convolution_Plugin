@@ -152,12 +152,7 @@ void Dynamic_ConvolverAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
 {
     juce::ScopedNoDenormals noDenormals;
     
-
-//    std::span<float> channelSpan {buffer.getWritePointer(0), static_cast<size_t>( buffer.getNumSamples()) };
-    
     d2_conv->processBlock(buffer);
-    
-//    juce::FloatVectorOperations::copy(buffer.getWritePointer(1), buffer.getReadPointer(0), buffer.getNumSamples());
 }
 
 //==============================================================================

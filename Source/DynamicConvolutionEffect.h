@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "DynamicConvolverV2.h"
+#include "DynamicConvolver.h"
 
 
 //Wrapper Class for Dynamic Convolvutoin class
