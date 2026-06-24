@@ -16,7 +16,7 @@
 #include <JuceHeader.h>
 #include <complex.h>
 #include <memory.h>
-#include "Convolver.hpp"
+#include <span>
 
 
 class DynamicConvolverV2 : juce::AudioProcessorValueTreeState::Listener
@@ -57,24 +57,18 @@ private:
     
     
     std::vector<float> irData; //IR Raw Data
-    
     std::vector<std::vector<float>> IRffts;//IR FFT Results / Convolution Buffer
     
-
     //Basic fftBuffer to hold outputs, especially in createWindowedFFT()
     std::vector<float> fftBuffer;
 
     std::vector<float> windowedFFT;//stores summed FFT output after convolution
     
-
     int inputFftIndex = 0;
     std::vector<std::vector<float>> inputFFTbuffer;//Stores FFT result from new block input
     
     std::vector<float> overlapBuffer; //Stores overlaping convolution data
     
-    
-    //End Fast Conv Import==========================
-
     
     //Parameters
     std::atomic<float> filePosition{0.0};

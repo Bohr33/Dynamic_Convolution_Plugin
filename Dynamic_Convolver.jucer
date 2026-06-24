@@ -7,16 +7,6 @@
     <GROUP id="{1A2E5F99-AFCE-2A56-DA8A-8F4517D4FF7F}" name="Source">
       <FILE id="wnOB4Q" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
-      <FILE id="RN77Fw" name="Convolver.cpp" compile="1" resource="0" file="Source/Convolver.cpp"/>
-      <FILE id="ovQ6c9" name="Convolver.hpp" compile="0" resource="0" file="Source/Convolver.hpp"/>
-      <FILE id="WQTcdW" name="ConvolutionEffects.cpp" compile="1" resource="0"
-            file="Source/ConvolutionEffects.cpp"/>
-      <FILE id="MQGeJn" name="ConvolutionEffects.h" compile="0" resource="0"
-            file="Source/ConvolutionEffects.h"/>
-      <FILE id="LUeDLY" name="DynamicConvolver.cpp" compile="1" resource="0"
-            file="Source/DynamicConvolver.cpp"/>
-      <FILE id="xYCJ8K" name="DynamicConvolver.hpp" compile="0" resource="0"
-            file="Source/DynamicConvolver.hpp"/>
       <FILE id="Kad6B5" name="Graphics.cpp" compile="1" resource="0" file="Source/Graphics.cpp"/>
       <FILE id="WgRQq3" name="Graphics.hpp" compile="0" resource="0" file="Source/Graphics.hpp"/>
       <FILE id="E0amfW" name="DynamicConvolverV2.cpp" compile="1" resource="0"
