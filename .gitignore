@@ -11,4 +11,7 @@ Builds/
 #and library code
 JuceLibraryCode/
 
-/archive
+archive/
+
+
+.DS_Store

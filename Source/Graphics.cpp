@@ -8,15 +8,15 @@
 #include "Graphics.hpp"
 
 FileHighlight::FileHighlight(juce::AudioProcessorValueTreeState& vts) : valueTreeState(vts){
-    valueTreeState.addParameterListener("filepos", this);
-    valueTreeState.addParameterListener("filelength", this);
+    valueTreeState.addParameterListener("FILE_POS", this);
+    valueTreeState.addParameterListener("FILE_LEN", this);
     startTimerHz(60);
 };
 
 FileHighlight::~FileHighlight()
 {
-    valueTreeState.removeParameterListener("filepos", this);
-    valueTreeState.removeParameterListener("filelength", this);
+    valueTreeState.removeParameterListener("FILE_POS", this);
+    valueTreeState.removeParameterListener("FILE_LEN", this);
 }
 
 void FileHighlight::paint(juce::Graphics& g)
@@ -31,9 +31,9 @@ void FileHighlight::paint(juce::Graphics& g)
 
 void FileHighlight::parameterChanged(const juce::String& parameterID, float newValue)
 {
-    if(parameterID == "filepos")
+    if(parameterID == "FILE_POS")
         filePos.store(newValue);
-    else if (parameterID == "filelength")
+    else if (parameterID == "FILE_LEN")
         fileLen.store(newValue);
 }
 

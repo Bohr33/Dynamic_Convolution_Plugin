@@ -23,9 +23,7 @@ Dynamic_ConvolverAudioProcessor::Dynamic_ConvolverAudioProcessor()
         parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
 #endif
 {
-    filePosParameter = parameters.getRawParameterValue("filelength");
-    fileLengthParameter = parameters.getRawParameterValue("filepos");
-    d_conv = std::make_unique<Dynamic_Convolution>(parameters);
+    d2_conv = std::make_unique<DynamicConvolutionEffect>(parameters);
 }
 
 Dynamic_ConvolverAudioProcessor::~Dynamic_ConvolverAudioProcessor()
@@ -41,9 +39,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout Dynamic_ConvolverAudioProces
     
     return
     {
-        std::make_unique<AudioParameterFloat>(ParameterID {"filelength", versionHint}, "File Length", 0.0f, 1.0f, 1.0f),
-        std::make_unique<AudioParameterFloat> (ParameterID{"filepos", versionHint},  "File Pos", 0.0f, 1.0f, 0.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"drywet", versionHint},
+        std::make_unique<AudioParameterFloat>(ParameterID {"FILE_LEN", versionHint}, "File Length", 0.0f, 1.0f, 1.0f),
+        std::make_unique<AudioParameterFloat> (ParameterID{"FILE_POS", versionHint},  "File Pos", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"DRY_WET", versionHint},
                                               "Dry/Wet", 0.0f, 1.0f, 0.5f)
     };
 }
@@ -112,17 +110,10 @@ void Dynamic_ConvolverAudioProcessor::changeProgramName (int index, const juce::
 //==============================================================================
 void Dynamic_ConvolverAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    
-//    juce::dsp::ProcessSpec spec;
-//    spec.sampleRate = getSampleRate();
-//    spec.numChannels = 2;
-//    spec.maximumBlockSize = getBlockSize();
-//    convolver.prepare(spec);
-//    convolver.reset();
-//    f_conv.prepare(samplesPerBlock, sampleRate);
-    d_conv->prepare(samplesPerBlock, sampleRate);
+
+
+    d2_conv->prepare(samplesPerBlock);
+
 }
 
 void Dynamic_ConvolverAudioProcessor::releaseResources()
@@ -161,7 +152,7 @@ void Dynamic_ConvolverAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
 {
     juce::ScopedNoDenormals noDenormals;
     
-    d_conv->process(buffer);
+    d2_conv->processBlock(buffer);
 }
 
 //==============================================================================

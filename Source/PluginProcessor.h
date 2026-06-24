@@ -9,8 +9,8 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Convolver.hpp"
-#include "DynamicConvolver.hpp"
+#include "DynamicConvolver.h"
+#include "DynamicConvolutionEffect.h"
 
 //==============================================================================
 /**
@@ -58,10 +58,7 @@ public:
     
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
-    Convolution convolver;
-//    Fast_Convolve f_conv;
-//    Dynamic_Convolution d_conv;
-    std::unique_ptr<Dynamic_Convolution> d_conv;
+    std::unique_ptr<DynamicConvolutionEffect> d2_conv;
     
 private:
     //==============================================================================
@@ -71,9 +68,5 @@ private:
     std::atomic<float>* filePosParameter = nullptr;
     std::atomic<float>* fileLengthParameter  = nullptr;
     std::atomic<float>* dryWetParameter = nullptr;
-    
-    
-//    juce::dsp::ProcessSpec spec;
-//    juce::dsp::Convolution convolution;
     
 };
