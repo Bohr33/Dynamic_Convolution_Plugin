@@ -14,5 +14,8 @@ JuceLibraryCode/
 
 archive/
 
+.vscode
+
+ProjectOutline.md
 
 .DS_Store
