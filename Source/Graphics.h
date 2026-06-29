@@ -8,8 +8,10 @@
 #ifndef Graphics_hpp
 #define Graphics_hpp
 
-#include <JuceHeader.h>
 #include <stdio.h>
+
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_graphics/juce_graphics.h>
 
 class FileHighlight : public juce::Component, juce::AudioProcessorValueTreeState::Listener, juce::Timer
 {

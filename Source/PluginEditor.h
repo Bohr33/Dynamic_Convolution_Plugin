@@ -8,9 +8,13 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+
 #include "PluginProcessor.h"
-#include "Graphics.hpp"
+#include "Graphics.h"
+
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_graphics/juce_graphics.h>
+#include <juce_audio_utils/juce_audio_utils.h>
 
 //==============================================================================
 /**

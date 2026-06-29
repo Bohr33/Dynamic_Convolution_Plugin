@@ -13,10 +13,16 @@
 
 
 #include <stdio.h>
-#include <JuceHeader.h>
+
+
+#include <juce_core/juce_core.h>
+#include <juce_dsp/juce_dsp.h>
+#include <juce_audio_processors/juce_audio_processors.h>
+
+#include <span>
+#include <vector>
 #include <complex.h>
 #include <memory.h>
-#include <span>
 
 
 class DynamicConvolverV2 : juce::AudioProcessorValueTreeState::Listener
