@@ -20,6 +20,14 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     addAndMakeVisible(&openButton);
     openButton.setButtonText("Open");
     openButton.onClick = [this] {openButtonClicked();};
+
+
+    //New Sliders
+    s_filePos.attach(valueTreeState, "FILE_POS");
+    s_filePos.setText("File Position");
+    addAndMakeVisible(s_filePos);
+
+
     
     filePosAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "FILE_POS", filePosSlider));
     filePosSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
@@ -88,7 +96,9 @@ void Dynamic_ConvolverAudioProcessorEditor::resized()
     openButton.setBounds(20, getHeight()-190, getWidth()-40, 20);
     
     
-    filePosSlider.setBounds(knobsX, knobY, knobWidth, knobHeight);
+
+    s_filePos.setBounds(knobsX, knobY, knobWidth, knobHeight);
+    // filePosSlider.setBounds(knobsX, knobY, knobWidth, knobHeight);
     fPosLabel.setBounds(knobsX, labelY, knobWidth, labelHeight);
     
     fileLengthSlider.setBounds(knobsX + knobPadding + knobWidth, knobY, knobWidth, knobHeight);
