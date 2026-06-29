@@ -10,7 +10,7 @@
 
 
 #include "PluginProcessor.h"
-#include "Graphics.h"
+#include "FileHighlight.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_graphics/juce_graphics.h>

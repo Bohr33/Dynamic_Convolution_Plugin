@@ -1,11 +1,11 @@
 //
-//  Graphics.cpp
+//  FileHighlight.cpp
 //  Dynamic_Convolver - VST3
 //
 //  Created by Benjamin Ward (Old Computer) on 6/7/25.
 //
 
-#include "Graphics.h"
+#include "FileHighlight.h"
 
 FileHighlight::FileHighlight(juce::AudioProcessorValueTreeState& vts) : valueTreeState(vts){
     valueTreeState.addParameterListener("FILE_POS", this);

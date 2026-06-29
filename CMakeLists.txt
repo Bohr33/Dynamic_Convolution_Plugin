@@ -51,8 +51,8 @@ target_sources(DynamicConvolver PRIVATE
     Source/DynamicConvolutionEffect.cpp
     Source/DynamicConvolutionEffect.h
 
-    Source/Graphics.cpp
-    Source/Graphics.h
+    Source/FileHighlight.cpp
+    Source/FileHighlight.h
 
 )
 
