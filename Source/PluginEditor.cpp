@@ -14,8 +14,9 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     : AudioProcessorEditor (&p), audioProcessor (p), valueTreeState(vts),
     thumbnailCache(5), thumbnail(512, formatManager, thumbnailCache)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
+
+    setLookAndFeel(&myLandF);
+
     
     addAndMakeVisible(&openButton);
     openButton.setButtonText("Open");
@@ -25,6 +26,7 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     //New Sliders
     s_filePos.attach(valueTreeState, "FILE_POS");
     s_filePos.setText("File Position");
+    s_filePos.setTitleSize(5.0);
     addAndMakeVisible(s_filePos);
 
 
@@ -49,9 +51,9 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
     dwLabel.setJustificationType(juce::Justification::centred);
     
     addAndMakeVisible(&fLengthLabel);
-    addAndMakeVisible(&fPosLabel);
+    // addAndMakeVisible(&fPosLabel);
     
-    addAndMakeVisible(&filePosSlider);
+    // addAndMakeVisible(&filePosSlider);
     addAndMakeVisible(&fileLengthSlider);
     
     addAndMakeVisible(&dryWetSlider);
@@ -69,6 +71,7 @@ Dynamic_ConvolverAudioProcessorEditor::Dynamic_ConvolverAudioProcessorEditor (Dy
 
 Dynamic_ConvolverAudioProcessorEditor::~Dynamic_ConvolverAudioProcessorEditor()
 {
+    setLookAndFeel(nullptr);
 }
 
 //==============================================================================

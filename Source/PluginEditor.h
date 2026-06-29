@@ -48,6 +48,8 @@ private:
     // access the processor object that created it.
     Dynamic_ConvolverAudioProcessor& audioProcessor;
     juce::AudioProcessorValueTreeState& valueTreeState;
+
+    MyLookAndFeel myLandF;
     
     
     juce::AudioFormatManager formatManager;
@@ -67,6 +69,10 @@ private:
     juce::Slider dryWetSlider;
     juce::Label dwLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryWetAttch;
+
+    BasicDialComponent s_filePos;
+
+    
     
     //Custom Graphics Component
     std::unique_ptr<FileHighlight> fileHighlight;

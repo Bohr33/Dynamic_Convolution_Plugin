@@ -66,6 +66,14 @@ target_include_directories(DynamicConvolver PRIVATE
 )
 
 
+# Binary Data - Font
+juce_add_binary_data(DynamicConvolver_Font
+    SOURCES
+        Rescources/ZenMaruGothic-Light.ttf
+)
+
+
+
 # ============================================================
 # Compile Definitions
 # ============================================================
@@ -81,6 +89,7 @@ target_link_libraries(DynamicConvolver PRIVATE
     
     # copied from PVExperiments, double check which are
     # actually necessary
+    DynamicConvolver_Font
     juce::juce_dsp
     juce::juce_audio_processors
     juce::juce_gui_basics
